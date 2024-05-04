@@ -1,0 +1,8 @@
+- [x] cue fetch specific version
+- [ ] symlink docs
+    - docs dir in each
+    - symlink specific docs
+- [ ] full flake
+    - cue things
+    - kubernetes things
+        - helm uninstall protection
