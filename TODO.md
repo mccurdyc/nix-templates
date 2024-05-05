@@ -1,8 +1,9 @@
 - [x] cue fetch specific version
-- [ ] symlink docs
-    - docs dir in each
-    - symlink specific docs
-- [ ] full flake
+- [x] symlink docs
+    - Symlinks don't work in target directory
+    - looked into hard vs soft links, neither will work for how I want to use this.
+        - I want git to evaluate the link, but not "share" that link
+- [x] full flake
     - cue things
     - kubernetes things
         - helm uninstall protection
