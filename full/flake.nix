@@ -152,6 +152,8 @@
 
                 # HashiCorp
                 pinned_terraform
+                pkgs.tflint
+                pkgs.terraform-ls
                 pinned_vault
                 # pkgs.vault-bin
               ];

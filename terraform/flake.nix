@@ -87,6 +87,8 @@
                 pkgs-unstable.nil
 
                 pinned_terraform
+                pkgs.tflint
+                pkgs.terraform-ls
               ];
           };
         };
