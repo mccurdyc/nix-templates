@@ -19,6 +19,8 @@
             description = "A very basic flake";
             welcomeText = ''
               # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
               - Run `nix develop`
             '';
           };
@@ -28,6 +30,8 @@
             description = "A comprehensive flake with tools like (pinned) Cue, Kubernetes (things), (pinned) terraform, nix, etc.";
             welcomeText = ''
               # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
               - Run `nix develop`
             '';
           };
@@ -37,6 +41,8 @@
             description = "A flake with (pinned) Cue.";
             welcomeText = ''
               # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
               - Run `nix develop`
             '';
           };
@@ -46,6 +52,8 @@
             description = "A flake with python.";
             welcomeText = ''
               # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
               - Run `nix develop`
             '';
           };
@@ -55,6 +63,8 @@
             description = "A flake with (pinned) Terraform.";
             welcomeText = ''
               # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
               - Run `nix develop`
             '';
           };

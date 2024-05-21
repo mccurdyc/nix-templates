@@ -28,7 +28,7 @@
             inherit system;
             config.allowUnfree = true;
             config.permittedInsecurePackages = [
-              "vault-bin-1.15.6"
+              # "vault-bin-1.15.6"
             ];
           };
           pkgs-unstable = import inputs.nixpkgs-unstable {
@@ -67,29 +67,45 @@
             # https://github.com/NixOS/nixpkgs/blob/736142a5ae59df3a7fc5137669271183d8d521fd/doc/build-helpers/special/mkshell.section.md?plain=1#L1
             packages =
               let
-                cue_0_9_0_alpha4 = pkgs.callPackage (import ./nix/github.nix) {
+                pinned_cue = pkgs.callPackage (import ./nix/github.nix) {
                   inherit system;
                   org = "cue-lang";
                   name = "cue";
                   version = "v0.9.0-alpha.4";
-                  # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.9.0-alpha.4/cue_v0.9.0-alpha.4_darwin_arm64.tar.gz'
                   # https://github.com/NixOS/nixpkgs/blob/54b4bb956f9891b872904abdb632cea85a033ff2/doc/build-helpers/fetchers.chapter.md#update-source-hash-with-the-fake-hash-method
                   sha256 = {
-                    # "" = pkgs.lib.fakeSha256; # Trust-on-first-use: just do this to get the correct value
-                    "x86_64-linux" = pkgs.lib.fakeSha256;
-                    "aarch64-darwin" = "sha256-WY5VAqR56XXmhjwAuCFHaXQiwi5nukdEsEft3BrmRcA=";
-                    "x86_64-darwin" = pkgs.lib.fakeSha256;
+                    # nix-prefetch-url --type sha256 https://github.com/cue-lang/cue/releases/download/v0.9.0-alpha.4/cue_v0.9.0-alpha.4_linux_amd64.tar.gz
+                    "x86_64-linux" = "0ks2g9k8hnhjyawhn6hpy6nh4s72l5dbv2h5621vgqhsawdkwd4h";
+                    # nix-prefetch-url --type sha256 https://github.com/cue-lang/cue/releases/download/v0.9.0-alpha.4/cue_v0.9.0-alpha.4_darwin_amd64.tar.gz
+                    "x86_64-darwin" = "04nnmqlrhww4mfd9m2zxpk1nyfsgdyrkgsjp349lxp971wnxhy5h";
+                    # nix-prefetch-url --type sha256 https://github.com/cue-lang/cue/releases/download/v0.9.0-alpha.4/cue_v0.9.0-alpha.4_darwin_arm64.tar.gz
+                    "aarch64-darwin" = "1h25wqddrva7n124gfk75v124x398whvh01whvk7bsbrlh15b3jr";
                   }.${system};
                 };
-                terraform_1_8_2 = pkgs.callPackage (import ./nix/hashicorp.nix) {
+                pinned_terraform = pkgs.callPackage (import ./nix/hashicorp.nix) {
                   inherit system;
                   name = "terraform";
                   version = "1.8.2";
                   sha256 = {
-                    "x86_64-linux" = pkgs.lib.fakeSha256; # Trust-on-first-use: just do this to get the correct value
-                    # "aarch64-darwin" = pkgs.lib.fakeSha256; # Trust-on-first-use: just do this to get the correct value
-                    "aarch64-darwin" = "sha256-+HH0yR6v7G5uiCU9w8wLaiHWP6Vv7l7hYp885opgWHM="; # Trust-on-first-use: just do this to get the correct value
-                    "x86_64-darwin" = pkgs.lib.fakeSha256; # Trust-on-first-use: just do this to get the correct value
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip
+                    "x86_64-linux" = "1k4ag2004bdbv9zjzhcd985l9f69mm90b45yxkh98bg5a50wrwvl";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_darwin_amd64.zip
+                    "x86_64-darwin" = "08p53xdmh7spqiqdsx14s09n1817yzw2rfzza4caqr5sb8rxl6m7";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_darwin_arm64.zip
+                    "aarch64-darwin" = "0wsqc25fcg4zcbhmxvkgllzxc8ba1g6c6g95i1p6xv5g3v4z8wgq";
+                  }.${system};
+                };
+                pinned_vault = pkgs.callPackage (import ./nix/hashicorp.nix) {
+                  inherit system;
+                  name = "vault";
+                  version = "1.16.2";
+                  sha256 = {
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/vault/1.16.2/vault_1.16.2_linux_amd64.zip
+                    "x86_64-linux" = "1dxlm21i43p9b5va3rg4v5ddn45pbgvk3dyx9zw79dhcnxif9338";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/vault/1.16.2/vault_1.16.2_darwin_amd64.zip
+                    "x86_64-darwin" = "0c8764h012myyzw951d494838adywwaf30i3viwwbv9x4wi6v274";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/vault/1.16.2/vault_1.16.2_darwin_arm64.zip
+                    "aarch64-darwin" = "1vmisl3bq5x7l81ddz4b5r2iid0pfxz5yl7sdddy4rrxgrgchnfa";
                   }.${system};
                 };
               in
@@ -98,6 +114,11 @@
                 pkgs.gnumake
                 pkgs.curl
                 pkgs.yq-go
+
+                # Cloud
+                pkgs.google-cloud-sdk
+                pkgs.awscli2
+                pkgs.ssm-session-manager-plugin
 
                 # Linters
                 pkgs.yamllint
@@ -111,7 +132,7 @@
                 pkgs-unstable.cuelsp
                 pkgs-unstable.cuetools
                 pkgs-unstable.nil
-                cue_0_9_0_alpha4
+                pinned_cue
 
                 # Kubernetes
                 pkgs.infra
@@ -120,7 +141,6 @@
                 pkgs.kubie
                 pkgs.linkerd
                 pkgs.stern
-                pkgs.vault-bin
                 pkgs.wireguard-go
                 pkgs.wireguard-tools
 
@@ -130,8 +150,10 @@
                 pkgs.docker
                 pkgs.docker-compose
 
-                # Terraform
-                terraform_1_8_2
+                # HashiCorp
+                pinned_terraform
+                pinned_vault
+                # pkgs.vault-bin
               ];
           };
         };

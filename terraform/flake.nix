@@ -64,32 +64,29 @@
             # https://github.com/NixOS/nixpkgs/blob/736142a5ae59df3a7fc5137669271183d8d521fd/doc/build-helpers/special/mkshell.section.md?plain=1#L1
             packages =
               let
-                terraform_1_8_2 = pkgs.callPackage (import ./nix/hashicorp.nix) {
+                pinned_terraform = pkgs.callPackage (import ./nix/hashicorp.nix) {
                   inherit system;
                   name = "terraform";
                   version = "1.8.2";
                   sha256 = {
-                    # https://nixos.org/manual/nix/stable/command-ref/nix-prefetch-url.html
-                    # https://github.com/NixOS/nixpkgs/blob/54b4bb956f9891b872904abdb632cea85a033ff2/doc/build-helpers/fetchers.chapter.md#update-source-hash-with-the-fake-hash-method
-                    # "" = pkgs.lib.fakeSha256; # Trust-on-first-use: just do this to get the correct value
-                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_darwin_amd64.zip
-                    # Add --unpack if using fetchFromGitHub
-                    # The result is a base-32 encoded hash, but it works where 'sha256-...' works.
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip
                     "x86_64-linux" = "1k4ag2004bdbv9zjzhcd985l9f69mm90b45yxkh98bg5a50wrwvl";
-                    "aarch64-darwin" = "0wsqc25fcg4zcbhmxvkgllzxc8ba1g6c6g95i1p6xv5g3v4z8wgq";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_darwin_amd64.zip
                     "x86_64-darwin" = "08p53xdmh7spqiqdsx14s09n1817yzw2rfzza4caqr5sb8rxl6m7";
+                    # nix-prefetch-url --type sha256 https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_darwin_arm64.zip
+                    "aarch64-darwin" = "0wsqc25fcg4zcbhmxvkgllzxc8ba1g6c6g95i1p6xv5g3v4z8wgq";
                   }.${system};
                 };
               in
               [
-                terraform_1_8_2
-
                 pkgs.gnumake
 
                 # nix
                 pkgs.statix
                 pkgs.nixpkgs-fmt
                 pkgs-unstable.nil
+
+                pinned_terraform
               ];
           };
         };
