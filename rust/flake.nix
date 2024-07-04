@@ -42,9 +42,14 @@
             inherit system overlays;
             config.allowUnfree = true;
           };
-          v = "1.78.0";
+          v = "1.79.0";
           # v = "latest";
-          rustVersion = pkgs.rust-bin.stable.${v}.default;
+          rustChannel = "stable";
+          # rustChannel = nightly
+          # rustChannel = beta
+          rustVersion = pkgs.rust-bin.${rustChannel}.${v}.default.override {
+            extensions = [ "rust-src" "rust-analyzer" ];
+          };
 
           rustPlatform = pkgs.makeRustPlatform {
             cargo = rustVersion;
@@ -102,11 +107,9 @@
 
               # Rust
               pkgs.openssl
-              pkgs.cargo
-              pkgs.rustc
-              pkgs.rustfmt
               pkgs.rust-analyzer
               pkgs.rustPackages.clippy
+              rustVersion
             ];
           };
         };
