@@ -36,6 +36,20 @@
             '';
           };
 
+          rust = {
+            path = ./rust;
+            description = "A Rust flake";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+              - Run `nix build`
+              - Run `nix run`
+            '';
+          };
+
+
           cue = {
             path = ./cue;
             description = "A flake with (pinned) Cue.";
