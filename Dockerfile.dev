@@ -32,4 +32,10 @@ RUN nix build .#yq && cp -v result/bin/yq /usr/bin/yq
 # - `nix develop` prevents commands from being run in parallel
 FROM alpine:3.20
 
-COPY --from=base /usr/bin/* /usr/bin/
+# TODO(FUTURE): These are tools that only CI needs. Maybe we include them in the Nix flake also.
+# I'm burning too much time on this side quest now though.
+RUN apk add --no-cache --update coreutils bash git openssh
+
+# for dynamically linked things
+COPY --from=base /nix/store /nix/store/
+COPY --from=base /usr/bin/cue /usr/bin/curl /usr/bin/make /usr/bin/just /usr/bin/jq /usr/bin/perl /usr/bin/yq /usr/bin/
