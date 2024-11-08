@@ -50,9 +50,8 @@
 
             ci_packages = {
               cue = pinned_cue;
-              curl = pkgs.curl;
-              jq = pkgs.jq;
-              just = pkgs-unstable.just; # need just >1.33 for working-directory setting
+              inherit (pkgs) curl jq;
+              inherit (pkgs-unstable) just; # need just >1.33 for working-directory setting
               yq = pkgs.yq-go;
             };
 
