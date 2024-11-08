@@ -15,7 +15,7 @@ nix flake init --template 'git+ssh://git@github.com/mccurdyc/nix-templates?ref=m
 - List templates
 
 ```bash
-nix flake show templates
+nix flake show
 ```
 
 - Update existing directory with template
