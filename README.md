@@ -4,6 +4,12 @@ Opinionates Nix per-repo flakes.
 
 ## Usage
 
+### Forcing the Flake to Update
+
+```bash
+nix flake update --flake 'git+ssh://git@github.com/mccurdyc/nix-templates'
+```
+
 ### From a specific branch
 
 ```bash
