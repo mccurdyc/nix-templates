@@ -3,7 +3,7 @@
   description = "A collection of flake templates";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -25,9 +25,31 @@
             '';
           };
 
+          docker = {
+            path = ./docker;
+            description = "A flake with a Dockerfile";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+            '';
+          };
+
           full = {
             path = ./full;
             description = "A comprehensive flake with tools like (pinned) Cue, Kubernetes (things), (pinned) terraform, nix, etc.";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+            '';
+          };
+
+          go = {
+            path = ./go;
+            description = "A Go flake.";
             welcomeText = ''
               # Getting started
               - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
