@@ -1,0 +1,75 @@
+# Reference - https://github.com/release-drafter/release-drafter/blob/master/.github/release-drafter.yml
+name-template: 'DRAFT-v$RESOLVED_VERSION'
+tag-template: 'DRAFT-v$RESOLVED_VERSION'
+
+# https://github.com/marketplace/actions/release-drafter#autolabeler
+# Automatically a label into a pull request, with the autolabeler option.
+# Adding such labels to your PRs can be automated by using the
+# embedded Autolabeler functionality (see below), PR Labeler or Probot Auto Labeler.
+# - https://github.com/TimonVS/pr-labeler-action
+#   - Do NOT use. Only supports simple file patterns
+# - https://github.com/probot/autolabeler
+#   - Do NOT use. Only supports simple file patterns
+autolabeler:
+  - label: 'high-risk'
+    title:
+      - /^(?:(.*\bhigh-risk\b)).*/i
+
+  - label: 'breaking-change'
+    title:
+      - /^(?:(.*\bbreaking\b)).*/i
+
+  - label: 'bug'
+    # contains "bug" OR "bugs" OR "typo"
+    title:
+      - /^(?:(.*\bbug\b)).*/i
+      - /^(?:(.*\bbugs\b)).*/i
+      - /^(?:(.*\btypo\b)).*/i
+      - /^(?:(.*\btypos\b)).*/i
+    body:
+      - /^(?:(.*\bbug\b)).*/i
+      - /^(?:(.*\bbugs\b)).*/i
+      - /^(?:(.*\btypo\b)).*/i
+      - /^(?:(.*\btypos\b)).*/i
+
+  - label: 'documentation'
+    # contains "doc" OR "documentation
+    title:
+      - /^(?:(.*\bdoc\b)).*/i
+      - /^(?:(.*\bdocs\b)).*/i
+      - /^(?:(.*\bdocumentation\b)).*/i
+      - /^(?:(.*\brunbook\b)).*/i
+
+template: |
+  # 📝Summary of Changes
+
+  $CHANGES
+
+  📋 **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+# https://github.com/release-drafter/release-drafter?tab=readme-ov-file#categorize-pull-requests
+categories:
+  - title: '🔴 High Risk Change(s)'
+    label: 'high-risk'
+  - title: '🔴 Breaking Changes'
+    label: 'breaking-change'
+  - title: '🐛 Bug Fixes'
+    label: 'bug'
+  - title: 'Other changes'
+  - title: '📚 Documentation Updates'
+    collapse-after: 0
+    label: 'documentation'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+version-resolver:
+  major:
+    labels:
+      - 'breaking-change'
+  minor:
+  patch:
+    labels:
+      - 'bug'
+  default: minor
+
+# header: |
+# footer: |
