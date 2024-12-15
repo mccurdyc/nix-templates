@@ -4,12 +4,13 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    # https://lazamar.co.uk/nix-versions/?package=yarn&version=1.22.19&fullName=yarn-1.22.19&keyName=yarn&revision=336eda0d07dc5e2be1f923990ad9fdb6bc8e28e3&channel=nixpkgs-unstable#instructions
+    # go 1.23.3
+    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/314e12ba369ccdb9b352a4db26ff419f7c49fa84.tar.gz";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, nixpkgs-go, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = { };
 
@@ -32,6 +33,10 @@
             inherit system;
             config.allowUnfree = true;
           };
+          pkgs-go = import inputs.nixpkgs-go {
+            inherit system;
+            config.allowUnfree = true;
+          };
 
           ci_packages = {
             # Nix
@@ -41,7 +46,7 @@
             inherit (pkgs-unstable) just; # need just >1.33 for working-directory setting
 
             # Go
-            inherit (pkgs) go;
+            inherit (pkgs-go) go; # go 1.23.3
             goimports = pkgs.gotools; # goimports
             staticcheck = pkgs.go-tools; # staticcheck
             inherit (pkgs) goimports-reviser;
