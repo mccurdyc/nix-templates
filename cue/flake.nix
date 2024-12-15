@@ -2,13 +2,15 @@
   description = "Repo configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # go 1.23.3
+    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/314e12ba369ccdb9b352a4db26ff419f7c49fa84.tar.gz";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, nixpkgs-go, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; }
       {
         flake = { };
@@ -32,19 +34,23 @@
               inherit system;
               config.allowUnfree = true;
             };
+            pkgs-go = import inputs.nixpkgs-go {
+              inherit system;
+              config.allowUnfree = true;
+            };
 
 
             pinned_cue = pkgs.callPackage (import ./nix/github.nix) {
               inherit system;
               org = "cue-lang";
               name = "cue";
-              version = "v0.10.0";
-              # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.10.0/cue_v0.10.0_darwin_arm64.tar.gz'
+              version = "v0.11.0";
+              # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.11.0/cue_v0.11.0_darwin_arm64.tar.gz'
               # https://github.com/NixOS/nixpkgs/blob/54b4bb956f9891b872904abdb632cea85a033ff2/doc/build-helpers/fetchers.chapter.md#update-source-hash-with-the-fake-hash-method
               sha256 = {
-                "x86_64-linux" = "1liz2gkd0zj72xbg0fynsrcz1rsdqdpfjsgqzwbzv54wyrv9qi4g";
-                "aarch64-darwin" = "06k72afvxl0jfa97b8f2b9r7fb7889m0dcqgx2hl6bv8ifp5sbpp";
-                "x86_64-darwin" = "13r3nlh8y06735cnzd7qsq1kb8hfc057g5r4yvwfi2jjhyysrmnd";
+                "x86_64-linux" = "0iyx01q9ksd5xyap3bny5hnb1h82a0vybzd5hp3ha31rk5ckixzz";
+                "aarch64-darwin" = "1az41fwlhka4y0jz9szkgfq880mp95143r71by1kgrsb325qdf4d";
+                "x86_64-darwin" = "0bdxx09nic1wwzpakp2c0fzadxplcjycnxa2fd5na84y4xybrajm";
               }.${system};
             };
 
@@ -53,6 +59,7 @@
               inherit (pkgs) curl jq;
               inherit (pkgs-unstable) just; # need just >1.33 for working-directory setting
               yq = pkgs.yq-go;
+              inherit (pkgs-go) go; # go 1.23.
             };
 
             packages = (builtins.attrValues ci_packages) ++ [
