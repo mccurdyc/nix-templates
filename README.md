@@ -42,6 +42,16 @@ nix flake new <target-dir> --template 'git+ssh://git@github.com/mccurdyc/nix-tem
 nix flake update
 ```
 
+### Updating nixpkgs
+
+```bash
+fd \
+    --type directory \
+    --exact-depth 1 \
+    --exec zsh -c "pushd {} && sed -i 's/24.05/24.11/g' flake.nix && sleep 5 && nix flake update"
+
+```
+
 ## Design Decisions
 
 - Using flake-parts
