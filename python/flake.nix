@@ -1,8 +1,6 @@
 {
-  description = "Repo configuration";
-
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -10,12 +8,10 @@
 
   outputs = inputs@{ nixpkgs, nixpkgs-unstable, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # TODO: currently does nothing
       flake = { };
 
       systems = [
         "aarch64-darwin"
-        "x86_64-darwin"
         "x86_64-linux"
       ];
 
@@ -60,7 +56,10 @@
           devShells.default = pkgs.mkShell {
             # https://github.com/NixOS/nixpkgs/blob/736142a5ae59df3a7fc5137669271183d8d521fd/doc/build-helpers/special/mkshell.section.md?plain=1#L1
             packages = [
-              pkgs.gnumake
+              # needed for numpy
+              pkgs.gcc
+              pkgs.zlib
+
               pkgs.python3Full
               pkgs.python3Packages.pip
 
@@ -75,7 +74,8 @@
               # Tells pip to put packages into $PIP_PREFIX instead of the usual locations.
               # See https://pip.pypa.io/en/stable/user_guide/#environment-variables.
               export PIP_PREFIX=$(pwd)/_build/pip_packages
-              export PYTHONPATH="$PIP_PREFIX/${pkgs.python3Full.sitePackages}:$PYTHONPATH"
+              export PYTHONPATH="$PIP_PREFIX/${pkgs.python3Full.sitePackages}"
+              export LD_LIBRARY_PATH="${pkgs.zlib}/lib:${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
               export PATH="$PIP_PREFIX/bin:$PATH"
               unset SOURCE_DATE_EPOCH
 
