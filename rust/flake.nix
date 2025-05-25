@@ -1,12 +1,9 @@
 {
-  description = "Repo configuration";
-
   # References
   # - https://ryantm.github.io/nixpkgs/languages-frameworks/rust/
   # - https://github.com/tfc/rust_async_http_code_experiment/blob/master/flake.nix
-
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
