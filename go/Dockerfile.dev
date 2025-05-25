@@ -35,4 +35,4 @@ RUN apk add --no-cache --update coreutils bash git openssh
 
 # for dynamically linked things
 COPY --from=base /nix/store /nix/store/
-COPY --from=base /usr/bin/go /usr/bin/just /usr/bin/make
+COPY --from=base /usr/bin/go /usr/bin/just
