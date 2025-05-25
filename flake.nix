@@ -3,7 +3,7 @@
   description = "A collection of flake templates";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
