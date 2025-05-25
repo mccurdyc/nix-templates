@@ -1,11 +1,7 @@
 {
-  description = "Repo configuration";
-
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    # https://lazamar.co.uk/nix-versions/?package=yarn&version=1.22.19&fullName=yarn-1.22.19&keyName=yarn&revision=336eda0d07dc5e2be1f923990ad9fdb6bc8e28e3&channel=nixpkgs-unstable#instructions
-    nixpkgs-foo.url = "https://github.com/NixOS/nixpkgs/archive/336eda0d07dc5e2be1f923990ad9fdb6bc8e28e3.tar.gz";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
@@ -16,7 +12,6 @@
 
       systems = [
         "aarch64-darwin"
-        "x86_64-darwin"
         "x86_64-linux"
       ];
 
@@ -33,11 +28,6 @@
             inherit system;
             config.allowUnfree = true;
           };
-          pkgs-foo = import inputs.nixpkgs-foo {
-            inherit system;
-            config.allowUnfree = true;
-          };
-
 
           ci_packages = {
             # Nix
