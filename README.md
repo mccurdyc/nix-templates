@@ -13,7 +13,7 @@ nix flake update --flake 'git+ssh://git@github.com/mccurdyc/nix-templates'
 ### From a specific branch
 
 ```bash
-nix flake init --template 'git+ssh://git@github.com/mccurdyc/nix-templates?ref=main'`
+nix flake init --template 'git+ssh://git@github.com/mccurdyc/nix-templates?ref=main'
 ```
 
 ### Choosing a template
@@ -27,13 +27,13 @@ nix flake show
 - Update existing directory with template
 
 ```bash
-nix flake init --template 'git+ssh://git@github.com/mccurdyc/nix-templates#full'`
+nix flake init --template 'git+ssh://git@github.com/mccurdyc/nix-templates#full'
 ```
 
 - Create new directory from template
 
 ```bash
-nix flake new <target-dir> --template 'git+ssh://git@github.com/mccurdyc/nix-templates#full'`
+nix flake new <target-dir> --template 'git+ssh://git@github.com/mccurdyc/nix-templates#full'
 ```
 
 ### Updating flake
