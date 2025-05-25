@@ -71,18 +71,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-foo": {
-      "locked": {
-        "lastModified": 1708814358,
-        "narHash": "sha256-mYJwTy2TNTOXbxVtmhXDv98F2ORhxRzL1S6yw1+1G20=",
-        "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/336eda0d07dc5e2be1f923990ad9fdb6bc8e28e3.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/336eda0d07dc5e2be1f923990ad9fdb6bc8e28e3.tar.gz"
-      }
-    },
     "nixpkgs-lib": {
       "locked": {
         "lastModified": 1743296961,
@@ -154,7 +142,6 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-foo": "nixpkgs-foo",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "pre-commit-hooks": "pre-commit-hooks"
       }
