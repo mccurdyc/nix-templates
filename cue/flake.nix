@@ -39,18 +39,21 @@
               config.allowUnfree = true;
             };
 
+            common = builtins.fetchGit {
+              url = "ssh://git@github.com/mccurdyc/playground.git";
+              # NOTE: you have to give it a commit for hermetic builds, you CANNOT use a branch name.
+              rev = "084060e7894c7e7c83d6491637d7c47a8eb1c83b";
+            };
 
-            pinned_cue = pkgs.callPackage (import ./nix/github.nix) {
+            pinned_cue = pkgs.callPackage "${common}/nix/common/github.nix" {
               inherit system;
               org = "cue-lang";
               name = "cue";
-              version = "v0.11.0";
-              # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.11.0/cue_v0.11.0_darwin_arm64.tar.gz'
-              # https://github.com/NixOS/nixpkgs/blob/54b4bb956f9891b872904abdb632cea85a033ff2/doc/build-helpers/fetchers.chapter.md#update-source-hash-with-the-fake-hash-method
+              version = "v0.13.0";
+              # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.13.0/cue_v0.13.0_darwin_arm64.tar.gz'
               sha256 = {
-                "x86_64-linux" = "0iyx01q9ksd5xyap3bny5hnb1h82a0vybzd5hp3ha31rk5ckixzz";
-                "aarch64-darwin" = "1az41fwlhka4y0jz9szkgfq880mp95143r71by1kgrsb325qdf4d";
-                "x86_64-darwin" = "0bdxx09nic1wwzpakp2c0fzadxplcjycnxa2fd5na84y4xybrajm";
+                "x86_64-linux" = "1adnf4hb9w0ncpcmvwi2y0k0318zz0xc6zp1sb6x4z50gl9rdfjr";
+                "aarch64-darwin" = "12l6ljdc7vjs5b1qygpzi1bacpwbm2fsb9hgan6wf84bickws2yp";
               }.${system};
             };
 
