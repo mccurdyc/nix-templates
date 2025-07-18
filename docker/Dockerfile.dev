@@ -20,7 +20,10 @@ WORKDIR /src
 # rebuild all
 #
 # To identify/debug the correct source path, run `nix buid .#<pkg>` outside of the dockerfile
-RUN nix build .#just  && cp -v result/bin/just /usr/bin/just
+RUN mkdir -p /tmp/build
+RUN nix build '.#just' && \
+  nix-store --query --requisites --include-outputs result | xargs -I {} cp -r {} /tmp/build && \
+  cp -v result/bin/just /usr/bin/just
 
 # Motivation for having a final image?
 # - Running `nix develop` in CI takes too long (>2min)
@@ -33,5 +36,6 @@ FROM alpine:3.20
 RUN apk add --no-cache --update coreutils bash git openssh
 
 # for dynamically linked things
-COPY --from=base /nix/store /nix/store/
-COPY --from=base /usr/bin/just
+# for dynamically linked things
+COPY --from=base /tmp/build /nix/store/
+COPY --from=base /usr/bin/just /usr/bin/
