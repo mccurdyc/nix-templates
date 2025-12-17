@@ -3,7 +3,7 @@
   description = "A collection of flake templates";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -58,7 +58,7 @@
             '';
           };
 
-          rust = {
+          rust-starter = {
             path = ./rust;
             description = "A Rust flake";
             welcomeText = ''
@@ -71,6 +71,18 @@
             '';
           };
 
+          rust-minimal = {
+            path = ./rust;
+            description = "A Rust flake";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+              - Run `nix build`
+              - Run `nix run`
+            '';
+          };
 
           cue = {
             path = ./cue;
@@ -104,6 +116,28 @@
               - Run `nix develop`
             '';
           };
+
+          latex-paper = {
+            path = ./latex/paper;
+            description = "LaTeX for a paper.";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix run`
+            '';
+          };
+
+          latex-slides = {
+            path = ./latex/slides;
+            description = "LaTeX for slides.";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix run`
+            '';
+          };
         };
 
         templates.default = self.templates.minimal;
@@ -111,7 +145,6 @@
 
       systems = [
         "aarch64-darwin"
-        "x86_64-darwin"
         "x86_64-linux"
       ];
 
@@ -140,9 +173,25 @@
           checks = {
             pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
               src = ./.;
+              # These excludes apply for nix flake check.[web:15]
+              excludes = [
+                "outputs/.*"
+                "result/.*"
+              ];
+
               hooks = {
                 # Nix
-                deadnix.enable = true;
+                deadnix = {
+                  enable = true;
+                  # These settings are passed to deadnix itself.[web:15]
+                  settings = {
+                    exclude = [
+                      "outputs"
+                      "result"
+                    ];
+                    noLambdaArg = true;
+                  };
+                };
                 nixpkgs-fmt.enable = true;
                 statix.enable = true;
 

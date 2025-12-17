@@ -1,0 +1,67 @@
+\documentclass[acmlarge,review,nonacm]{acmart}
+
+% remove ACM things
+\setcopyright{none}
+\settopmatter{printacmref=false, printfolios=true}
+
+% remove contact info from footer
+\renewcommand{\footnotetextcopyrightpermission}[1]{}
+
+\usepackage{graphicx}
+\usepackage{datetime}
+\usepackage{url}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10}
+}
+
+% Force a line break after \subsubsections
+\usepackage{titlesec}
+\titleformat{\subsubsection}[hang]
+  {\normalfont\normalsize}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{*3.25}{*1.5}
+
+\title{Placeholder title}
+\subtitle{Last updated: \today}
+\author{Colton McCurdy}
+
+\begin{abstract}
+  To address X, Y, Z, we propose A, B, C
+  \begin{enumerate}
+    \item A
+    \item B
+    \item C
+  \end{enumerate}
+
+  To accomplish this, we propose breaking this down into the following phases:
+  \begin{enumerate}
+    \item P1
+    \item P2
+    \item P3
+  \end{enumerate}
+\end{abstract}
+
+\begin{document}
+
+% remove contact info from footer
+\makeatletter
+\def\@authorsaddresses{}
+\makeatother
+
+\maketitle
+
+\input{sections/introduction}
+\input{sections/proposal}
+\input{sections/plan}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\input{sections/appendix}
+\end{document}
