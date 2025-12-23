@@ -9,7 +9,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, ... }:
+  outputs = inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       # https://nixos.wiki/wiki/Flakes#Output_schema
       flake = {
@@ -138,9 +138,21 @@
               - Run `nix run`
             '';
           };
+
+          bare = {
+            path = ./bare;
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+              - Run `nix build`
+              - Run `nix run`
+            '';
+          };
         };
 
-        templates.default = self.templates.minimal;
+        templates.default = self.templates.bare;
       };
 
       systems = [
