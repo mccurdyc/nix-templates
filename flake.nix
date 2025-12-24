@@ -141,6 +141,7 @@
 
           bare = {
             path = ./bare;
+            description = "No flake packages.";
             welcomeText = ''
               # Getting started
               - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
@@ -151,8 +152,6 @@
             '';
           };
         };
-
-        templates.default = self.templates.bare;
       };
 
       systems = [
