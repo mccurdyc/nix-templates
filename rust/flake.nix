@@ -14,7 +14,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, rust-overlay, ... }:
+  outputs = inputs@{ self, flake-parts, rust-overlay, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = { };
 
@@ -96,8 +96,17 @@
                 cargo-check.enable = true;
 
                 # Shell
-                shellcheck.enable = true;
-                shfmt.enable = true;
+                shellcheck = {
+                  enable = true;
+                  # exclude exactly .envrc anywhere
+                  excludes = [ "\\.envrc$" ];
+                  # or only check *.sh files
+                  # files = "\\.sh$";
+                };
+                shfmt = {
+                  enable = true;
+                  entry = "shfmt --simplify --indent 2";
+                };
               };
             };
           };

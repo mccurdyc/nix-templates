@@ -1,12 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, ... }:
+  outputs = inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = { };
 
@@ -62,7 +62,13 @@
                 statix.enable = true;
 
                 # Shell
-                shellcheck.enable = true;
+                shellcheck = {
+                  enable = true;
+                  # exclude exactly .envrc anywhere
+                  excludes = [ "\\.envrc$" ];
+                  # or only check *.sh files
+                  # files = "\\.sh$";
+                };
                 shfmt = {
                   enable = true;
                   entry = "shfmt --simplify --indent 2";
