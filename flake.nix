@@ -151,6 +151,19 @@
               - Run `nix run`
             '';
           };
+
+          asm = {
+            path = ./asm;
+            description = "No flake packages.";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+              - Run `nix build`
+              - Run `nix run`
+            '';
+          };
         };
       };
 
