@@ -1,23 +1,25 @@
-FROM lukemathwalker/cargo-chef:0.1.67-rust-1.80-alpine3.20 as chef
-WORKDIR /usr/src/app
+# syntax=docker/dockerfile:1
+FROM lukemathwalker/cargo-chef:latest-rust-1.87-alpine AS chef
+WORKDIR /app
 
-FROM chef as planner
+FROM chef AS planner
 COPY . .
-# Compute a lock-like file for our project
 RUN cargo chef prepare --recipe-path recipe.json
 
-FROM chef as builder
-WORKDIR /usr/src/app
-COPY --from=planner /usr/src/app/recipe.json recipe.json
-# Build our project dependencies, not our application!
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+# Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
-# Up to this point, if our dependency tree stays the same,
-# all layers should be cached.
-# Build our project
+# Build application
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --bin app
 
 FROM alpine:3.20 AS runtime
-RUN apk add --no-cache openssl ca-certificates
-COPY --from=builder /usr/src/app/target/release/ /usr/local/bin/
-CMD ["/usr/local/bin/echo"]
+RUN apk add --no-cache ca-certificates \
+    && addgroup -g 1000 app \
+    && adduser -D -s /bin/sh -u 1000 -G app app
+WORKDIR /app
+COPY --from=builder /app/target/release/app /app/app
+USER app
+ENTRYPOINT ["/app/app"]
+CMD ["greet"]
