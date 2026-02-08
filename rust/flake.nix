@@ -18,7 +18,8 @@
       # imports are core to how flake-parts evaluates flakeModules perSystem
       imports = [
         # rust-flake proxies rust-overlay and crane modules - https://github.com/juspay/rust-flake/blob/7bb4b549c89bcba9f2c0db3206be282562824655/flake.nix#L22
-        # All of `config` available as `self'.rust-project.config.<something>`
+        # Use `self'` for outputs (the public interface)
+        # Use `config` for internal module options (the configuration interface)
         inputs.rust-flake.flakeModules.default
         inputs.rust-flake.flakeModules.nixpkgs
         inputs.git-hooks.flakeModule
@@ -86,6 +87,8 @@
         # nix eval '.#devShells.$(nix eval --impure --raw --expr builtins.currentSystem).default'
         devShells.default = pkgs.mkShell {
           inputsFrom = [
+            # output visibility, not evaluation timing. Both modules are fully evaluated;
+            # they just expose their results differently.
             self'.devShells.rust
             config.pre-commit.devShell # https://github.com/cachix/git-hooks.nix/blob/a8ca480175326551d6c4121498316261cbb5b260/flake-module.nix#L81
           ];
