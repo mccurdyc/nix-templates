@@ -1,159 +1,101 @@
 {
-  # References
-  # - https://ryantm.github.io/nixpkgs/languages-frameworks/rust/
-  # - https://github.com/tfc/rust_async_http_code_experiment/blob/master/flake.nix
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    git-hooks.url = "github:cachix/git-hooks.nix";
+
     flake-parts.url = "github:hercules-ci/flake-parts";
-    # For a pure binary installation of the Rust toolchain
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    rust-flake.url = "github:juspay/rust-flake";
   };
 
-  outputs = inputs@{ self, flake-parts, rust-overlay, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      flake = { };
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" ];
 
-      systems = [
-        "aarch64-darwin"
-        "x86_64-darwin"
-        "x86_64-linux"
+      # imports are core to how flake-parts evaluates flakeModules perSystem
+      imports = [
+        # rust-flake proxies rust-overlay and crane modules - https://github.com/juspay/rust-flake/blob/7bb4b549c89bcba9f2c0db3206be282562824655/flake.nix#L22
+        # All of `config` available as `self'.rust-project.config.<something>`
+        inputs.rust-flake.flakeModules.default
+        inputs.rust-flake.flakeModules.nixpkgs
+        inputs.git-hooks.flakeModule
       ];
 
-      # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-      imports = [ inputs.flake-parts.flakeModules.easyOverlay ];
+      perSystem = { self', config, pkgs, ... }: {
+        rust-project.crates."app".crane.args = {
+          # Add any crate-specific build dependencies here
+        };
 
-      perSystem = { system, ... }:
-        let
-          overlays = [ (import rust-overlay) ];
-          pkgs = import inputs.nixpkgs {
-            inherit system overlays;
-            config.allowUnfree = true;
-          };
-          pkgs-unstable = import inputs.nixpkgs-unstable {
-            inherit system overlays;
-            config.allowUnfree = true;
-          };
-          # v = "1.80.1";
-          v = "latest";
-          rustChannel = "stable";
-          # rustChannel = nightly
-          # rustChannel = beta
-          pinnedRust = pkgs.rust-bin.${rustChannel}.${v}.default.override {
-            extensions = [
-              "rust-src"
-              "rust-analyzer"
-            ];
-          };
-
-          # Used for 'nix build'
-          rustPlatform = pkgs.makeRustPlatform {
-            cargo = pinnedRust;
-            rustc = pinnedRust;
-          };
-        in
-        {
-          # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-          overlayAttrs = { inherit pkgs-unstable overlays; };
-
-          formatter = pkgs.nixpkgs-fmt;
-
-          # https://github.com/cachix/git-hooks.nix
-          # 'nix flake check'
-          checks = {
-            # 'pre-commit run' to test directly
-            pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
-              src = ./.;
-              hooks = {
-                # Project
-                just-test = {
-                  enable = true;
-                  name = "just-test";
-                  entry = "just test";
-                  stages = [ "pre-commit" ];
-                  pass_filenames = false;
-                };
-
-                just-lint = {
-                  enable = true;
-                  name = "just-lint";
-                  entry = "just lint";
-                  stages = [ "pre-commit" ];
-                  pass_filenames = false;
-                };
-
-                # Nix
-                deadnix.enable = true;
-                nixpkgs-fmt.enable = true;
-                statix.enable = true;
-
-                # Rust
-                rustfmt.enable = true;
-                cargo-check.enable = true;
-
-                # Shell
-                shellcheck = {
-                  enable = true;
-                  # exclude exactly .envrc anywhere
-                  excludes = [ "\\.envrc$" ];
-                  # or only check *.sh files
-                  # files = "\\.sh$";
-                };
-                shfmt = {
-                  enable = true;
-                  entry = "shfmt --simplify --indent 2";
-                };
-              };
+        # https://flake.parts/options/git-hooks-nix.html
+        # available fields - https://flake.parts/options/git-hooks-nix.html#opt-perSystem.pre-commit.settings.hooks._name_.enable
+        # usage:
+        #   pre-commit run <check> --all-files
+        pre-commit = {
+          check.enable = true;
+          settings.hooks = {
+            just-test = {
+              enable = true;
+              name = "just-test";
+              entry = "just test";
+              stages = [ "pre-commit" ];
+              pass_filenames = false;
             };
-          };
 
-          packages = {
-            # nix build
-            # nix run
-            default = rustPlatform.buildRustPackage {
-              pname = "app";
-              version = "1.0.0";
-              src = pkgs.lib.cleanSource ./.; # the folder with the cargo.toml
-              cargoLock.lockFile = ./Cargo.lock;
-              cargoBuildFlags = [ "--bin" "app" ];
-              doCheck = false; # disable so that these can be built independently
-              # https://nixos.org/manual/nixpkgs/stable/#ssec-installCheck-phase
-              doInstallCheck = true; # disable so that these can be built independently
+            just-lint = {
+              enable = true;
+              name = "just-lint";
+              entry = "just lint";
+              stages = [ "pre-commit" ];
+              pass_filenames = false;
             };
-          };
 
-          devShells.default = pkgs.mkShell {
-            inherit (self.checks.${system}.pre-commit-check) shellHook;
-            nativeBuildInputs = with pkgs; [
-              gcc
-            ];
-            buildInputs = with pkgs; [
-              pinnedRust
-            ] ++ self.checks.${system}.pre-commit-check.enabledPackages;
+            # Nix
+            flake-checker.enable = true;
+            deadnix.enable = true;
+            nixpkgs-fmt.enable = true;
+            statix.enable = true;
+            nil.enable = true;
 
-            # https://github.com/NixOS/nixpkgs/blob/736142a5ae59df3a7fc5137669271183d8d521fd/doc/build-helpers/special/mkshell.section.md?plain=1#L1
-            packages = [
-              pkgs.just
-              pkgs.statix
-              pkgs.nixpkgs-fmt
-              pkgs-unstable.nil
-              pkgs.hadolint
-              pkgs.dockerfile-language-server-nodejs
-              pkgs.dive
+            # Rust
+            rustfmt.enable = true;
+            cargo-check.enable = true;
+            clippy.enable = true;
 
-              # Rust
-              # NOTES:
-              # - Be careful defining rust tools (e.g., clippy) here because
-              # you need to guarantee they use the same Tust version as defined
-              # in rustVersion.
-              pkgs.openssl
-              pkgs.rust-analyzer
-            ];
+            # Shell
+            shellcheck = {
+              enable = true;
+              # exclude exactly .envrc anywhere
+              excludes = [ "\\.envrc$" ];
+              # or only check *.sh files
+              # files = "\\.sh$";
+            };
+            shfmt = {
+              enable = true;
+              entry = "shfmt --simplify --indent 2";
+            };
           };
         };
+
+        formatter = pkgs.nixpkgs-fmt;
+
+        # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
+        # nix eval '.#devShells.<system>.default'
+        # nix eval '.#devShells.$(nix eval --impure --raw --expr builtins.currentSystem).default'
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [
+            self'.devShells.rust
+            config.pre-commit.devShell # https://github.com/cachix/git-hooks.nix/blob/a8ca480175326551d6c4121498316261cbb5b260/flake-module.nix#L81
+          ];
+          packages = [
+            pkgs.just
+            pkgs.statix
+            pkgs.nixpkgs-fmt
+            pkgs.nil
+            pkgs.hadolint
+            pkgs.dockerfile-language-server
+            pkgs.dive
+          ];
+        };
+      };
     };
 }
