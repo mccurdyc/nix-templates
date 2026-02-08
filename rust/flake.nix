@@ -5,6 +5,9 @@
     git-hooks.url = "github:cachix/git-hooks.nix";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
+    # rust-flake builds on:
+    # - https://github.com/ipetkov/crane
+    # - https://github.com/oxalica/rust-overlay
     rust-flake.url = "github:juspay/rust-flake";
   };
 
