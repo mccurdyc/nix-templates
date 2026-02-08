@@ -23,84 +23,23 @@
         inputs.rust-flake.flakeModules.default
         inputs.rust-flake.flakeModules.nixpkgs
         inputs.git-hooks.flakeModule
+
+        # Local reusable modules
+        ./nix/modules/rust.nix
+        ./nix/modules/pre-commit.nix
+        ./nix/modules/devshell.nix
       ];
 
-      perSystem = { self', config, pkgs, ... }: {
-        rust-project.crates."app".crane.args = {
-          # Add any crate-specific build dependencies here
-        };
+      perSystem = {
+        mccurdyc = {
+          rust.enable = true;
 
-        # https://flake.parts/options/git-hooks-nix.html
-        # available fields - https://flake.parts/options/git-hooks-nix.html#opt-perSystem.pre-commit.settings.hooks._name_.enable
-        # usage:
-        #   pre-commit run <check> --all-files
-        pre-commit = {
-          check.enable = true;
-          settings.hooks = {
-            just-test = {
-              enable = true;
-              name = "just-test";
-              entry = "just test";
-              stages = [ "pre-commit" ];
-              pass_filenames = false;
-            };
-
-            just-lint = {
-              enable = true;
-              name = "just-lint";
-              entry = "just lint";
-              stages = [ "pre-commit" ];
-              pass_filenames = false;
-            };
-
-            # Nix
-            flake-checker.enable = true;
-            deadnix.enable = true;
-            nixpkgs-fmt.enable = true;
-            statix.enable = true;
-            nil.enable = true;
-
-            # Rust
-            rustfmt.enable = true;
-            cargo-check.enable = true;
-            clippy.enable = true;
-
-            # Shell
-            shellcheck = {
-              enable = true;
-              # exclude exactly .envrc anywhere
-              excludes = [ "\\.envrc$" ];
-              # or only check *.sh files
-              # files = "\\.sh$";
-            };
-            shfmt = {
-              enable = true;
-              entry = "shfmt --simplify --indent 2";
-            };
+          pre-commit = {
+            rust.enable = true;
+            just.enable = true;
           };
-        };
 
-        formatter = pkgs.nixpkgs-fmt;
-
-        # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
-        # nix eval '.#devShells.<system>.default'
-        # nix eval '.#devShells.$(nix eval --impure --raw --expr builtins.currentSystem).default'
-        devShells.default = pkgs.mkShell {
-          inputsFrom = [
-            # output visibility, not evaluation timing. Both modules are fully evaluated;
-            # they just expose their results differently.
-            self'.devShells.rust
-            config.pre-commit.devShell # https://github.com/cachix/git-hooks.nix/blob/a8ca480175326551d6c4121498316261cbb5b260/flake-module.nix#L81
-          ];
-          packages = [
-            pkgs.just
-            pkgs.statix
-            pkgs.nixpkgs-fmt
-            pkgs.nil
-            pkgs.hadolint
-            pkgs.dockerfile-language-server
-            pkgs.dive
-          ];
+          devshell.rust.enable = true;
         };
       };
     };
