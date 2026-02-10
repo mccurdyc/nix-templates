@@ -12,7 +12,6 @@
 #     build.enable = true;
 #     nix.enable = true;
 #     container.enable = false;
-#     rust.enable = true;
 #     extraPackages = [ pkgs.myTool ];
 #   };
 { lib, flake-parts-lib, ... }:
@@ -36,10 +35,6 @@ in
         enable = lib.mkEnableOption "container tools (hadolint, dockerfile-language-server, dive)" // { default = true; };
       };
 
-      rust = {
-        enable = lib.mkEnableOption "Rust development shell from rust-flake" // { default = false; };
-      };
-
       formatter = lib.mkOption {
         type = lib.types.package;
         default = pkgs.nixpkgs-fmt;
@@ -60,7 +55,7 @@ in
     };
   });
 
-  config.perSystem = { self', config, pkgs, ... }:
+  config.perSystem = { config, pkgs, ... }:
     let
       cfg = config.mccurdyc.devshell;
 
@@ -80,10 +75,6 @@ in
         pkgs.dive
       ];
 
-      rustInputs = lib.optionals cfg.rust.enable [
-        self'.devShells.rust
-      ];
-
       preCommitInputs = lib.optionals config.mccurdyc.pre-commit.enable [
         config.pre-commit.devShell
       ];
@@ -93,8 +84,7 @@ in
 
       # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
       devShells.default = pkgs.mkShell {
-        # TODO: the rust inputs should be passed in from the consuming rust flake.
-        inputsFrom = rustInputs ++ preCommitInputs ++ cfg.extraInputsFrom;
+        inputsFrom = preCommitInputs ++ cfg.extraInputsFrom;
 
         packages = buildPackages
           ++ nixPackages
