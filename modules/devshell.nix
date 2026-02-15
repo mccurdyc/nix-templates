@@ -32,7 +32,7 @@ in
       };
 
       container = {
-        enable = lib.mkEnableOption "container tools (hadolint, dockerfile-language-server, dive)" // { default = true; };
+        enable = lib.mkEnableOption "container tools (hadolint, dockerfile-language-server, dive)" // { default = false; };
       };
 
       formatter = lib.mkOption {
@@ -55,7 +55,7 @@ in
     };
   });
 
-  config.perSystem = { config, pkgs, ... }:
+  config.perSystem = { config, pkgs, options, ... }:
     let
       cfg = config.mccurdyc.devshell;
 
@@ -75,9 +75,11 @@ in
         pkgs.dive
       ];
 
-      preCommitInputs = lib.optionals config.mccurdyc.pre-commit.enable [
-        config.pre-commit.devShell
-      ];
+      preCommitInputs =
+        if (options.mccurdyc ? pre-commit && config.mccurdyc.pre-commit.enable) then
+          [ config.pre-commit.devShell ]
+        else
+          [ ];
     in
     lib.mkIf cfg.enable {
       inherit (cfg) formatter;
