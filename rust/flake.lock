@@ -114,14 +114,20 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "path": "../modules",
-        "type": "path"
+        "dir": "modules",
+        "lastModified": 1771259664,
+        "narHash": "sha256-oarf5HV5XbP8QLAO8uTPzOMF271jsbSwx3jFzJ5CHno=",
+        "owner": "mccurdyc",
+        "repo": "nix-templates",
+        "rev": "da87ebb926ec96e0bdef2824a52800f2556ef84a",
+        "type": "github"
       },
       "original": {
-        "path": "../modules",
-        "type": "path"
-      },
-      "parent": []
+        "dir": "modules",
+        "owner": "mccurdyc",
+        "repo": "nix-templates",
+        "type": "github"
+      }
     },
     "nixpkgs": {
       "locked": {

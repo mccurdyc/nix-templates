@@ -61,6 +61,7 @@ in
 
       buildPackages = lib.optionals cfg.build.enable [
         pkgs.just
+        pkgs.shfmt
       ];
 
       nixPackages = lib.optionals cfg.nix.enable [
@@ -80,13 +81,19 @@ in
           [ config.pre-commit.devShell ]
         else
           [ ];
+
+      dockerfileInputs =
+        if (options.mccurdyc ? dockerfile && config.mccurdyc.dockerfile.enable) then
+          [ config.devShells.dockerfile ]
+        else
+          [ ];
     in
     lib.mkIf cfg.enable {
       inherit (cfg) formatter;
 
       # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
       devShells.default = pkgs.mkShell {
-        inputsFrom = preCommitInputs ++ cfg.extraInputsFrom;
+        inputsFrom = preCommitInputs ++ dockerfileInputs ++ cfg.extraInputsFrom;
 
         packages = buildPackages
           ++ nixPackages

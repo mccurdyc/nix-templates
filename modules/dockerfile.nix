@@ -62,23 +62,30 @@ in
     };
   });
 
-  config.perSystem = { config, options, pkgs, ... }:
+  config.perSystem = { config, pkgs, ... }:
     let
       cfg = config.mccurdyc.dockerfile;
     in
-    lib.mkIf cfg.enable
-      (pkgs.writeTextFile
-        {
-          name = ".dockerignore";
-          text = cfg.baseIgnore + "\n" + cfg.extraIgnore;
-          destination = "./.dockerignore";
-        }
+    lib.mkIf cfg.enable {
+      devShells.dockerfile = pkgs.mkShell {
+        shellHook = ''
+          # Generate .dockerignore if missing
+          if [ ! -f .dockerignore ]; then
+            cat > .dockerignore << 'EOF'
+          ${cfg.baseIgnore}
+          ${cfg.extraIgnore}
+          EOF
+            echo "Created .dockerignore"
+          fi
 
-        pkgs.writeTextFile
-        {
-          name = "dockerfile";
-          text = cfg.content;
-          destination = "./Dockerfile";
-        }
-      );
+          # Generate Dockerfile if missing
+          if [ ! -f Dockerfile ]; then
+            cat > Dockerfile << 'EOF'
+          ${cfg.content}
+          EOF
+            echo "Created Dockerfile"
+          fi
+        '';
+      };
+    };
 }
