@@ -58,7 +58,7 @@
             '';
           };
 
-          rust-starter = {
+          rust-modules = {
             path = ./rust;
             description = "A Rust flake";
             welcomeText = ''
