@@ -19,7 +19,7 @@ let
   inherit (flake-parts-lib) mkPerSystemOption;
 in
 {
-  options.perSystem = mkPerSystemOption ({ pkgs, ... }: {
+  options.perSystem = mkPerSystemOption (_: {
     options.mccurdyc.devshell = {
       enable = lib.mkEnableOption "development shell" // { default = true; };
 
@@ -37,7 +37,6 @@ in
 
       formatter = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.nixpkgs-fmt;
         description = "Formatter package for 'nix fmt'";
       };
 
@@ -82,18 +81,41 @@ in
         else
           [ ];
 
-      dockerfileInputs =
-        if (options.mccurdyc ? dockerfile && config.mccurdyc.dockerfile.enable) then
-          [ config.devShells.dockerfile ]
+      dockerfileCfg = config.mccurdyc.dockerfile or { };
+
+      dockerfileShellHook =
+        if (options.mccurdyc ? dockerfile && dockerfileCfg.enable or false) then
+          ''
+            # Generate .dockerignore if missing
+            if [ ! -f .dockerignore ]; then
+              cat > .dockerignore << 'EOF'
+            ${dockerfileCfg.baseIgnore}
+            ${dockerfileCfg.extraIgnore}
+            EOF
+              echo "Created .dockerignore"
+            fi
+
+            # Generate Dockerfile if missing
+            if [ ! -f Dockerfile ]; then
+              cat > Dockerfile << 'EOF'
+            ${dockerfileCfg.content}
+            EOF
+              echo "Created Dockerfile"
+            fi
+          ''
         else
-          [ ];
+          "";
     in
     lib.mkIf cfg.enable {
+      mccurdyc.devshell.formatter = lib.mkDefault pkgs.nixpkgs-fmt;
+
       inherit (cfg) formatter;
 
       # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
       devShells.default = pkgs.mkShell {
-        inputsFrom = preCommitInputs ++ dockerfileInputs ++ cfg.extraInputsFrom;
+        inputsFrom = preCommitInputs ++ cfg.extraInputsFrom;
+
+        shellHook = dockerfileShellHook;
 
         packages = buildPackages
           ++ nixPackages
