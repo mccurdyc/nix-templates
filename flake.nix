@@ -58,8 +58,8 @@
             '';
           };
 
-          rust-modules = {
-            path = ./rust-modules;
+          rust = {
+            path = ./rust;
             description = "A Rust flake";
             welcomeText = ''
               # Getting started
