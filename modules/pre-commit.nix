@@ -46,7 +46,7 @@ in
     };
   });
 
-  config.perSystem = { config, ... }:
+  config.perSystem = { config, pkgs, ... }:
     let
       cfg = config.mccurdyc.pre-commit;
     in
@@ -55,50 +55,58 @@ in
       # usage: pre-commit run <check> --all-files
       pre-commit = {
         check.enable = true;
-        settings.hooks = lib.mkMerge [
-          (lib.mkIf cfg.just.enable {
-            just-test = {
-              enable = true;
-              name = "just-test";
-              entry = "just test";
-              stages = [ "pre-commit" ];
-              pass_filenames = false;
-            };
+        settings = {
+          tools = {
+            inherit (pkgs) just shfmt;
+          };
+          hooks = lib.mkMerge [
+            (lib.mkIf cfg.just.enable {
+              just-test = {
+                enable = true;
+                name = "just-test";
+                entry = "${pkgs.just}/bin/just test";
+                language = "system";
+                stages = [ "pre-commit" ];
+                pass_filenames = false;
+              };
 
-            just-lint = {
-              enable = true;
-              name = "just-lint";
-              entry = "just lint";
-              stages = [ "pre-commit" ];
-              pass_filenames = false;
-            };
-          })
+              just-lint = {
+                enable = true;
+                name = "just-lint";
+                entry = "${pkgs.just}/bin/just lint";
+                language = "system";
+                stages = [ "pre-commit" ];
+                pass_filenames = false;
+              };
+            })
 
-          (lib.mkIf cfg.nix.enable {
-            flake-checker.enable = true;
-            deadnix.enable = true;
-            nixpkgs-fmt.enable = true;
-            statix.enable = true;
-            nil.enable = true;
-          })
+            (lib.mkIf cfg.nix.enable {
+              flake-checker.enable = true;
+              deadnix.enable = true;
+              nixpkgs-fmt.enable = true;
+              statix.enable = true;
+              nil.enable = true;
+            })
 
-          (lib.mkIf cfg.rust.enable {
-            rustfmt.enable = true;
-            cargo-check.enable = true;
-            clippy.enable = true;
-          })
+            (lib.mkIf cfg.rust.enable {
+              rustfmt.enable = true;
+              cargo-check.enable = true;
+              clippy.enable = true;
+            })
 
-          (lib.mkIf cfg.shell.enable {
-            shellcheck = {
-              enable = true;
-              excludes = cfg.shell.shellcheckExcludes;
-            };
-            shfmt = {
-              enable = true;
-              entry = "shfmt --simplify --indent 2";
-            };
-          })
-        ];
+            (lib.mkIf cfg.shell.enable {
+              shellcheck = {
+                enable = true;
+                excludes = cfg.shell.shellcheckExcludes;
+              };
+              shfmt = {
+                enable = true;
+                entry = lib.mkForce "shfmt --simplify --indent 2";
+                language = "system";
+              };
+            })
+          ];
+        };
       };
     };
 }
