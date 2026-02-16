@@ -115,11 +115,11 @@
       },
       "locked": {
         "dir": "modules",
-        "lastModified": 1771260766,
-        "narHash": "sha256-iS/zePI2i7w6+Csx9wJoMZ/Nt1P9tKGW2oqOMi8/juA=",
+        "lastModified": 1771261152,
+        "narHash": "sha256-M3JIvNdqvESfigU++pp0282zyhxjgwNAiy46wyRnwoA=",
         "owner": "mccurdyc",
         "repo": "nix-templates",
-        "rev": "eced2cabf25c59a34e499656d0f04a517520a72b",
+        "rev": "385b525508562005c5a2102c98c58c2bbcc67702",
         "type": "github"
       },
       "original": {
