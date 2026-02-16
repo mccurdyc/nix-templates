@@ -18,6 +18,7 @@
             imports = [
               ./devshell.nix
               ./pre-commit.nix
+              ./dockerfile.nix
             ];
           };
         };
