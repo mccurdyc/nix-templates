@@ -62,7 +62,7 @@ in
     };
   });
 
-  config.perSystem = { config, pkgs, ... }:
+  config.perSystem = { config, options, pkgs, ... }:
     let
       cfg = config.mccurdyc.dockerfile;
     in
