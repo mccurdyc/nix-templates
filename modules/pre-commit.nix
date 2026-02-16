@@ -57,15 +57,14 @@ in
         check.enable = true;
         settings = {
           tools = {
-            inherit (pkgs) just shfmt;
+            inherit (pkgs) just;
           };
           hooks = lib.mkMerge [
             (lib.mkIf cfg.just.enable {
               just-test = {
                 enable = true;
                 name = "just-test";
-                entry = "${pkgs.just}/bin/just test";
-                language = "system";
+                entry = "just test";
                 stages = [ "pre-commit" ];
                 pass_filenames = false;
               };
@@ -73,8 +72,7 @@ in
               just-lint = {
                 enable = true;
                 name = "just-lint";
-                entry = "${pkgs.just}/bin/just lint";
-                language = "system";
+                entry = "just lint";
                 stages = [ "pre-commit" ];
                 pass_filenames = false;
               };
@@ -102,7 +100,6 @@ in
               shfmt = {
                 enable = true;
                 entry = lib.mkForce "shfmt --simplify --indent 2";
-                language = "system";
               };
             })
           ];
