@@ -6,3 +6,5 @@
 target/
 result/
 result
+Dockerfile
+.dockerignore
