@@ -11,8 +11,8 @@
     rust-flake.url = "github:juspay/rust-flake";
 
     # personal preferences
-    # mccurdyc-preferences.url = "path:../modules";
-    mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
+    mccurdyc-preferences.url = "path:../modules";
+    # mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
   outputs = inputs:
@@ -25,7 +25,7 @@
         inputs.mccurdyc-preferences.flakeModules.default
       ];
 
-      perSystem = { lib }: {
+      perSystem = _: {
         mccurdyc = {
           pre-commit = {
             enable = true;
