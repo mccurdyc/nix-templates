@@ -64,7 +64,7 @@ in
               just-test = {
                 enable = true;
                 name = "just-test";
-                entry = "just test";
+                entry = "${pkgs.just}/bin/just test";
                 stages = [ "pre-commit" ];
                 pass_filenames = false;
               };
@@ -72,7 +72,7 @@ in
               just-lint = {
                 enable = true;
                 name = "just-lint";
-                entry = "just lint";
+                entry = "${pkgs.just}/bin/just lint";
                 stages = [ "pre-commit" ];
                 pass_filenames = false;
               };
@@ -99,7 +99,7 @@ in
               };
               shfmt = {
                 enable = true;
-                entry = lib.mkForce "shfmt --simplify --indent 2";
+                entry = lib.mkForce "${pkgs.shfmt}/bin/shfmt --simplify --indent 2";
               };
             })
           ];
