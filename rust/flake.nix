@@ -23,9 +23,23 @@
       imports = [
         inputs.git-hooks.flakeModule
         inputs.mccurdyc-preferences.flakeModules.default
+        inputs.rust-flake.flakeModules.default
+        inputs.rust-flake.flakeModules.nixpkgs
       ];
 
-      perSystem = _: {
+      perSystem = { pkgs, ... }: {
+        rust-project.crates."app" = {
+          crane = {
+            args = {
+              nativeBuildInputs = [ pkgs.just ];
+            };
+            extraBuildArgs = {
+              buildPhaseCargoCommand = "just build";
+              checkPhaseCargoCommand = "just test";
+            };
+          };
+        };
+
         mccurdyc = {
           pre-commit = {
             enable = true;
@@ -57,7 +71,8 @@
               RUN cargo chef cook --release --recipe-path recipe.json
               # Build application
               COPY . .
-              RUN cargo build --release --bin app
+              RUN apk add --no-cache just
+              RUN just build
 
               FROM alpine:3.20 AS runtime
               RUN apk add --no-cache ca-certificates \

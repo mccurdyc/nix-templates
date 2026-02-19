@@ -5,6 +5,9 @@
 log := "warn"
 export JUST_LOG := log
 
+build:
+    cargo build --release --bin app
+
 test:
     cargo test -- --nocapture
 
