@@ -15,11 +15,8 @@
 #     extraPackages = [ pkgs.myTool ];
 #   };
 { lib, flake-parts-lib, ... }:
-let
-  inherit (flake-parts-lib) mkPerSystemOption;
-in
 {
-  options.perSystem = mkPerSystemOption (_: {
+  options.perSystem = flake-parts-lib.mkPerSystemOption (_: {
     options.mccurdyc.devshell = {
       enable = lib.mkEnableOption "development shell" // { default = true; };
 
