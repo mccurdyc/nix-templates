@@ -48,7 +48,7 @@
           };
 
           devshell = {
-            extraPackages = [ ];
+            extraPackages = [ pkgs.rust-analyzer ];
           };
 
           dockerfile = {
