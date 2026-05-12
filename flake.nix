@@ -72,7 +72,7 @@
           };
 
           rust-minimal = {
-            path = ./rust;
+            path = ./rust-minimal;
             description = "A Rust flake";
             welcomeText = ''
               # Getting started
