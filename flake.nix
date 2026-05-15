@@ -4,7 +4,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
@@ -188,7 +187,6 @@
         "x86_64-linux"
       ];
 
-      # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
       imports = [
         inputs.flake-parts.flakeModules.easyOverlay
         inputs.treefmt-nix.flakeModule
@@ -201,15 +199,8 @@
             inherit system;
             config.allowUnfree = true;
           };
-          pkgs-unstable = import inputs.nixpkgs-unstable {
-            inherit system;
-            config.allowUnfree = true;
-          };
         in
         {
-          # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-          overlayAttrs = { inherit pkgs-unstable; };
-
           treefmt = {
             projectRootFile = "flake.nix";
             programs = {
@@ -250,8 +241,10 @@
             inherit (self.checks.${system}.pre-commit-check) shellHook;
             buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
 
-            packages = [
-              pkgs-unstable.nil
+            packages = with pkgs; [
+              nil
+              deadnix
+              statix
             ];
           };
         };
