@@ -2,79 +2,91 @@
   description = "LaTeX environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { nixpkgs, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "aarch64-darwin"
+        "x86_64-linux"
+      ];
 
-      texlive = pkgs.texlive.combined.scheme-full;
+      perSystem =
+        { system, ... }:
+        let
+          pkgs = import inputs.nixpkgs {
+            inherit system;
+          };
 
-      buildLatex = pkgs.writeShellScriptBin "build-latex" ''
-        if [ -z "$1" ]; then
-          echo "Usage: build-latex <filename.tex>"
-          exit 1
-        fi
-        echo "Running pdflatex (pass 1)..."
-        ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
+          texlive = pkgs.texlive.combined.scheme-full;
 
-        # Extract basename without extension
-        BASENAME="''${1%.tex}"
+          buildLatex = pkgs.writeShellScriptBin "build-latex" ''
+            if [ -z "$1" ]; then
+              echo "Usage: build-latex <filename.tex>"
+              exit 1
+            fi
+            echo "Running pdflatex (pass 1)..."
+            ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
 
-        # Run bibtex if .aux file exists
-        if [ -f "$BASENAME.aux" ]; then
-          echo "Running bibtex..."
-          ${texlive}/bin/bibtex "$BASENAME" || true
-        fi
+            # Extract basename without extension
+            BASENAME="''${1%.tex}"
 
-        echo "Running pdflatex (pass 2)..."
-        ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
+            # Run bibtex if .aux file exists
+            if [ -f "$BASENAME.aux" ]; then
+              echo "Running bibtex..."
+              ${texlive}/bin/bibtex "$BASENAME" || true
+            fi
 
-        echo "Running pdflatex (pass 3)..."
-        ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
+            echo "Running pdflatex (pass 2)..."
+            ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
 
-        echo "Build complete: $BASENAME.pdf"
-      '';
-    in
-    {
-      devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [
-          # for building the latex treesitter grammar   (ノ ゜Д゜)ノ ︵ ┻━┻
-          nodejs
+            echo "Running pdflatex (pass 3)..."
+            ${texlive}/bin/pdflatex -interaction=nonstopmode "$1"
 
-          python3
-          buildLatex
+            echo "Build complete: $BASENAME.pdf"
+          '';
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            packages = with pkgs; [
+              # for building the latex treesitter grammar   (ノ ゜Д゜)ノ ︵ ┻━┻
+              nodejs
 
-          # nix things
-          nil
-          deadnix
-          statix
-          nixpkgs-fmt
-        ];
-      };
+              python3
+              buildLatex
 
-      packages.${system}.default = pkgs.writeShellScriptBin "latex-serve" ''
-        set -e
+              # nix things
+              nil
+              deadnix
+              statix
+              nixfmt
+            ];
+          };
 
-        # Cleanup function
-        cleanup() {
-          echo "Stopping services..."
-          kill $LATEXMK_PID $SERVER_PID 2>/dev/null || true
-        }
-        trap cleanup EXIT INT TERM
+          packages.default = pkgs.writeShellScriptBin "latex-serve" ''
+            set -e
 
-        # Build and watch with latexmk
-        echo "Building PDF with latexmk and watching for changes..."
-        ${texlive}/bin/latexmk -pdf -pvc -interaction=nonstopmode main.tex &
-        LATEXMK_PID=$!
+            # Cleanup function
+            cleanup() {
+              echo "Stopping services..."
+              kill $LATEXMK_PID $SERVER_PID 2>/dev/null || true
+            }
+            trap cleanup EXIT INT TERM
 
-        echo "Serving on http://localhost:8000/main.pdf"
-        echo "Press Ctrl+C to stop"
-        ${pkgs.python3}/bin/python3 -m http.server 8000 &
-        SERVER_PID=$!
-        wait
-      '';
+            # Build and watch with latexmk
+            echo "Building PDF with latexmk and watching for changes..."
+            ${texlive}/bin/latexmk -pdf -pvc -interaction=nonstopmode main.tex &
+            LATEXMK_PID=$!
+
+            echo "Serving on http://localhost:8000/main.pdf"
+            echo "Press Ctrl+C to stop"
+            ${pkgs.python3}/bin/python3 -m http.server 8000 &
+            SERVER_PID=$!
+            wait
+          '';
+        };
     };
 }

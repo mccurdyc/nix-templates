@@ -18,18 +18,26 @@
 {
   options.perSystem = flake-parts-lib.mkPerSystemOption (_: {
     options.mccurdyc.devshell = {
-      enable = lib.mkEnableOption "development shell" // { default = true; };
+      enable = lib.mkEnableOption "development shell" // {
+        default = true;
+      };
 
       build = {
-        enable = lib.mkEnableOption "build tools (just)" // { default = true; };
+        enable = lib.mkEnableOption "build tools (just)" // {
+          default = true;
+        };
       };
 
       nix = {
-        enable = lib.mkEnableOption "Nix tools (statix, nixpkgs-fmt, nil)" // { default = true; };
+        enable = lib.mkEnableOption "Nix tools (statix, nixfmt, nil)" // {
+          default = true;
+        };
       };
 
       container = {
-        enable = lib.mkEnableOption "container tools (hadolint, dockerfile-language-server, dive)" // { default = false; };
+        enable = lib.mkEnableOption "container tools (hadolint, dockerfile-language-server, dive)" // {
+          default = false;
+        };
       };
 
       formatter = lib.mkOption {
@@ -51,7 +59,13 @@
     };
   });
 
-  config.perSystem = { config, pkgs, options, ... }:
+  config.perSystem =
+    {
+      config,
+      pkgs,
+      options,
+      ...
+    }:
     let
       cfg = config.mccurdyc.devshell;
 
@@ -62,7 +76,7 @@
 
       nixPackages = lib.optionals cfg.nix.enable [
         pkgs.statix
-        pkgs.nixpkgs-fmt
+        pkgs.nixfmt
         pkgs.nil
       ];
 
@@ -104,7 +118,7 @@
           "";
     in
     lib.mkIf cfg.enable {
-      mccurdyc.devshell.formatter = lib.mkDefault pkgs.nixpkgs-fmt;
+      mccurdyc.devshell.formatter = lib.mkDefault pkgs.nixfmt;
 
       inherit (cfg) formatter;
 
@@ -114,10 +128,7 @@
 
         shellHook = dockerfileShellHook;
 
-        packages = buildPackages
-          ++ nixPackages
-          ++ containerPackages
-          ++ cfg.extraPackages;
+        packages = buildPackages ++ nixPackages ++ containerPackages ++ cfg.extraPackages;
       };
     };
 }

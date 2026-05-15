@@ -1,12 +1,15 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
+    pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = inputs@{ nixpkgs, nixpkgs-unstable, flake-parts, ... }:
+  outputs =
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       flake = { };
 
@@ -15,25 +18,36 @@
         "x86_64-linux"
       ];
 
-      # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-      imports = [ inputs.flake-parts.flakeModules.easyOverlay ];
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
 
-      perSystem = { system, ... }:
+      perSystem =
+        { config, system, ... }:
         let
           pkgs = import inputs.nixpkgs {
             inherit system;
             config.allowUnfree = true;
           };
-          pkgs-unstable = import inputs.nixpkgs-unstable {
-            inherit system;
-            config.allowUnfree = true;
-          };
         in
         {
-          # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-          overlayAttrs = { inherit pkgs-unstable; };
 
-          formatter = pkgs.nixpkgs-fmt;
+          treefmt = {
+            projectRootFile = "flake.nix";
+            programs = {
+              nixfmt.enable = true;
+              shfmt = {
+                enable = true;
+                indent_size = 2;
+              };
+              deadnix = {
+                enable = true;
+                no-lambda-arg = true;
+              };
+              statix.enable = true;
+              shellcheck.enable = true;
+            };
+          };
 
           # https://github.com/cachix/git-hooks.nix
           # 'nix flake check'
@@ -41,14 +55,10 @@
             pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
               src = ./.;
               hooks = {
-                # Nix
-                deadnix.enable = true;
-                nixpkgs-fmt.enable = true;
-                statix.enable = true;
-
-                # Shell
-                shellcheck.enable = true;
-                shfmt.enable = true;
+                treefmt = {
+                  enable = true;
+                  package = config.treefmt.build.wrapper;
+                };
               };
             };
           };
@@ -64,9 +74,7 @@
               pkgs.python3Packages.pip
 
               # nix
-              pkgs.statix
-              pkgs.nixpkgs-fmt
-              pkgs-unstable.nil
+              pkgs.nil
             ];
 
             shellHook = ''

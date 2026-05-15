@@ -9,7 +9,7 @@
         # Nix hooks
         flake-checker.enable = true;
         deadnix.enable = true;
-        nixpkgs-fmt.enable = true;
+        nixfmt-rfc-style.enable = true;
         statix.enable = true;
         nil.enable = true;
 

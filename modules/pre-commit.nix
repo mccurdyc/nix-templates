@@ -27,7 +27,9 @@ in
 {
   options.perSystem = mkPerSystemOption (_: {
     options.mccurdyc.pre-commit = {
-      enable = lib.mkEnableOption "pre-commit hooks" // { default = true; };
+      enable = lib.mkEnableOption "pre-commit hooks" // {
+        default = true;
+      };
 
       rootDir = lib.mkOption {
         type = lib.types.str;
@@ -41,15 +43,21 @@ in
       };
 
       nix = {
-        enable = lib.mkEnableOption "Nix hooks (flake-checker, deadnix, nixpkgs-fmt, statix, nil)" // { default = true; };
+        enable = lib.mkEnableOption "Nix hooks (flake-checker, deadnix, nixfmt, statix, nil)" // {
+          default = true;
+        };
       };
 
       rust = {
-        enable = lib.mkEnableOption "Rust hooks (rustfmt, cargo-check, clippy)" // { default = false; };
+        enable = lib.mkEnableOption "Rust hooks (rustfmt, cargo-check, clippy)" // {
+          default = false;
+        };
       };
 
       shell = {
-        enable = lib.mkEnableOption "Shell script hooks (shellcheck, shfmt)" // { default = true; };
+        enable = lib.mkEnableOption "Shell script hooks (shellcheck, shfmt)" // {
+          default = true;
+        };
         shellcheckExcludes = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ "\\.envrc$" ];
@@ -58,28 +66,27 @@ in
       };
 
       just = {
-        enable = lib.mkEnableOption "just hooks (just test, just lint)" // { default = false; };
+        enable = lib.mkEnableOption "just hooks (just test, just lint)" // {
+          default = false;
+        };
       };
     };
   });
 
-  config.perSystem = { config, pkgs, ... }:
+  config.perSystem =
+    { config, pkgs, ... }:
     let
       cfg = config.mccurdyc.pre-commit;
 
       # Wraps a command so it runs from rootDir. Used for hooks where
       # pass_filenames = false (i.e. they act on the whole project).
-      cdEntry = cmd:
-        if cfg.rootDir == "."
-        then cmd
-        else "bash -c 'cd ${lib.escapeShellArg cfg.rootDir} && ${cmd}'";
+      cdEntry =
+        cmd: if cfg.rootDir == "." then cmd else "bash -c 'cd ${lib.escapeShellArg cfg.rootDir} && ${cmd}'";
 
       # Regex that restricts file-based hooks to rootDir. An unset rootDir
       # ("." ) means no restriction.
-      scopedFiles = suffix:
-        if cfg.rootDir == "."
-        then suffix
-        else "^${lib.escapeRegex cfg.rootDir}/${suffix}";
+      scopedFiles =
+        suffix: if cfg.rootDir == "." then suffix else "^${lib.escapeRegex cfg.rootDir}/${suffix}";
     in
     lib.mkIf cfg.enable {
       # https://flake.parts/options/git-hooks-nix.html
@@ -123,7 +130,7 @@ in
                 enable = true;
                 files = scopedFiles ".*\\.nix$";
               };
-              nixpkgs-fmt = {
+              nixfmt-rfc-style = {
                 enable = true;
                 files = scopedFiles ".*\\.nix$";
               };

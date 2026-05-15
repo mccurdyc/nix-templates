@@ -1,26 +1,41 @@
 {
-  inputs = { nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable"; };
-  outputs = { nixpkgs, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
-    in
-    {
-      devShells.${system}.default = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [
-          nasm
-          unixtools.xxd
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+  };
 
-          shfmt
+  outputs =
+    inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "aarch64-darwin"
+        "x86_64-linux"
+      ];
 
-          # nix
-          deadnix
-          statix
-          nil
-          nixpkgs-fmt
-        ];
-        # libraries
-        buildInputs = [ ];
-      };
+      perSystem =
+        { system, ... }:
+        let
+          pkgs = import inputs.nixpkgs {
+            inherit system;
+          };
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              nasm
+              unixtools.xxd
+
+              shfmt
+
+              # nix
+              deadnix
+              statix
+              nil
+              nixfmt
+            ];
+            # libraries
+            buildInputs = [ ];
+          };
+        };
     };
 }

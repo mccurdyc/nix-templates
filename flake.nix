@@ -3,13 +3,16 @@
   description = "A collection of flake templates";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ self, flake-parts, ... }:
+  outputs =
+    inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       # https://nixos.wiki/wiki/Flakes#Output_schema
       flake = {
@@ -60,6 +63,19 @@
 
           rust = {
             path = ./rust;
+            description = "A Rust flake";
+            welcomeText = ''
+              # Getting started
+              - NOTE: If commits / pre-commit-hooks are taking a long time, make sure `.direnv/` is in your .gitignore
+              - Run `nix flake update`
+              - Run `nix develop`
+              - Run `nix build`
+              - Run `nix run`
+            '';
+          };
+
+          rust-full = {
+            path = ./rust-full;
             description = "A Rust flake";
             welcomeText = ''
               # Getting started
@@ -173,9 +189,13 @@
       ];
 
       # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
-      imports = [ inputs.flake-parts.flakeModules.easyOverlay ];
+      imports = [
+        inputs.flake-parts.flakeModules.easyOverlay
+        inputs.treefmt-nix.flakeModule
+      ];
 
-      perSystem = { system, ... }:
+      perSystem =
+        { config, system, ... }:
         let
           pkgs = import inputs.nixpkgs {
             inherit system;
@@ -190,46 +210,37 @@
           # This is needed for pkgs-unstable - https://github.com/hercules-ci/flake-parts/discussions/105
           overlayAttrs = { inherit pkgs-unstable; };
 
-          formatter = pkgs.nixpkgs-fmt;
+          treefmt = {
+            projectRootFile = "flake.nix";
+            programs = {
+              nixfmt.enable = true;
+              shfmt = {
+                enable = true;
+                indent_size = 2;
+              };
+              deadnix = {
+                enable = true;
+                no-lambda-arg = true;
+              };
+              statix.enable = true;
+              shellcheck.enable = true;
+            };
+          };
 
           # https://github.com/cachix/git-hooks.nix
           # 'nix flake check'
           checks = {
             pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
               src = ./.;
-              # These excludes apply for nix flake check.[web:15]
               excludes = [
                 "outputs/.*"
                 "result/.*"
               ];
 
               hooks = {
-                # Nix
-                deadnix = {
+                treefmt = {
                   enable = true;
-                  # These settings are passed to deadnix itself.[web:15]
-                  settings = {
-                    exclude = [
-                      "outputs"
-                      "result"
-                    ];
-                    noLambdaArg = true;
-                  };
-                };
-                nixpkgs-fmt.enable = true;
-                statix.enable = true;
-
-                # Shell
-                shellcheck = {
-                  enable = true;
-                  # exclude exactly .envrc anywhere
-                  excludes = [ "\\.envrc$" ];
-                  # or only check *.sh files
-                  # files = "\\.sh$";
-                };
-                shfmt = {
-                  enable = true;
-                  entry = "shfmt --simplify --indent 2";
+                  package = config.treefmt.build.wrapper;
                 };
               };
             };
@@ -239,10 +250,7 @@
             inherit (self.checks.${system}.pre-commit-check) shellHook;
             buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
 
-            # https://github.com/NixOS/nixpkgs/blob/736142a5ae59df3a7fc5137669271183d8d521fd/doc/build-helpers/special/mkshell.section.md?plain=1#L1
             packages = [
-              pkgs.statix
-              pkgs.nixpkgs-fmt
               pkgs-unstable.nil
             ];
           };
