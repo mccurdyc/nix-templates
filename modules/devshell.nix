@@ -81,7 +81,10 @@
       ];
 
       nixPackages = lib.optionals cfg.nix.enable [
+        pkgs.deadnix
         pkgs.nil
+        pkgs.nixfmt
+        pkgs.statix
       ];
 
       containerPackages = lib.optionals cfg.container.enable [
