@@ -3,34 +3,29 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # go 1.23.3
     nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/314e12ba369ccdb9b352a4db26ff419f7c49fa84.tar.gz";
-    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
-    pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
+    git-hooks.url = "github:cachix/git-hooks.nix";
     treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
   outputs =
-    inputs@{ self, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      flake = { };
-
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
         "x86_64-linux"
       ];
 
       imports = [
+        inputs.git-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
+        inputs.mccurdyc-preferences.flakeModules.default
       ];
 
       perSystem =
-        { config, system, ... }:
+        { pkgs, system, ... }:
         let
-          pkgs = import inputs.nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
           pkgs-go = import inputs.nixpkgs-go {
             inherit system;
             config.allowUnfree = true;
@@ -55,57 +50,19 @@
               }
               .${system};
           };
-
-          ci_packages = {
-            cue = pinned_cue;
-            inherit (pkgs) curl jq;
-            inherit (pkgs) just;
-            yq = pkgs.yq-go;
-            inherit (pkgs-go) go; # go 1.23.
-          };
-
-          packages = (builtins.attrValues ci_packages) ++ [
-            pkgs.nil
-          ];
         in
         {
-          treefmt = {
-            projectRootFile = "flake.nix";
-            programs = {
-              nixfmt.enable = true;
-              shfmt = {
-                enable = true;
-                indent_size = 2;
-              };
-              deadnix = {
-                enable = true;
-                no-lambda-arg = true;
-              };
-              statix.enable = true;
-              shellcheck.enable = true;
+          mccurdyc = {
+            pre-commit.enable = true;
+            devshell = {
+              extraPackages = [
+                pinned_cue
+                pkgs.curl
+                pkgs.jq
+                pkgs-go.go
+                pkgs.yq-go
+              ];
             };
-          };
-
-          # https://github.com/cachix/git-hooks.nix
-          # 'nix flake check'
-          checks = {
-            pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
-              src = ./.;
-              hooks = {
-                treefmt = {
-                  enable = true;
-                  package = config.treefmt.build.wrapper;
-                };
-              };
-            };
-          };
-
-          packages = ci_packages;
-
-          devShells.default = pkgs.mkShell {
-            inherit (self.checks.${system}.pre-commit-check) shellHook;
-            buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
-            inherit packages;
           };
         };
     };

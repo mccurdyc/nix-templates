@@ -1,27 +1,42 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    git-hooks.url = "github:cachix/git-hooks.nix";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
     rust-flake.url = "github:juspay/rust-flake";
-    rust-flake.inputs.nixpkgs.follows = "nixpkgs";
-    git-hooks.url = "github:cachix/git-hooks.nix";
-    git-hooks.inputs.nixpkgs.follows = "nixpkgs";
-    treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
-  outputs = inputs:
+  outputs =
+    inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" ];
+      systems = [
+        "aarch64-darwin"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
+
       imports = [
-        inputs.rust-flake.flakeModules.default
-        inputs.rust-flake.flakeModules.nixpkgs
         inputs.git-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
-        ./nix/rust.nix
-        ./nix/pre-commit.nix
-        ./nix/devshell.nix
-        ./nix/treefmt.nix
+        inputs.mccurdyc-preferences.flakeModules.default
+        inputs.rust-flake.flakeModules.default
+        inputs.rust-flake.flakeModules.nixpkgs
       ];
+
+      perSystem =
+        { pkgs, ... }:
+        {
+          mccurdyc = {
+            pre-commit = {
+              enable = true;
+              rust.enable = true;
+            };
+            devshell = {
+              extraPackages = [ pkgs.rust-analyzer ];
+            };
+          };
+        };
     };
 }

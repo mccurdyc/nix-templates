@@ -74,7 +74,12 @@ in
   });
 
   config.perSystem =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      options,
+      ...
+    }:
     let
       cfg = config.mccurdyc.pre-commit;
 
@@ -126,29 +131,9 @@ in
                 enable = true;
                 files = scopedFiles ".*\\.nix$";
               };
-              deadnix = {
-                enable = true;
-                files = scopedFiles ".*\\.nix$";
-              };
-              nixfmt-rfc-style = {
-                enable = true;
-                files = scopedFiles ".*\\.nix$";
-              };
-              statix = {
-                enable = true;
-                files = scopedFiles ".*\\.nix$";
-              };
-              nil = {
-                enable = true;
-                files = scopedFiles ".*\\.nix$";
-              };
             })
 
             (lib.mkIf cfg.rust.enable {
-              rustfmt = {
-                enable = true;
-                files = scopedFiles ".*\\.rs$";
-              };
               cargo-check = {
                 enable = true;
                 entry = cdEntry "cargo check";
@@ -163,16 +148,10 @@ in
               };
             })
 
-            (lib.mkIf cfg.shell.enable {
-              shellcheck = {
+            (lib.mkIf (options ? treefmt) {
+              treefmt = {
                 enable = true;
-                files = scopedFiles ".*\\.sh$";
-                excludes = cfg.shell.shellcheckExcludes;
-              };
-              shfmt = {
-                enable = true;
-                files = scopedFiles ".*\\.sh$";
-                entry = lib.mkForce "${pkgs.shfmt}/bin/shfmt --simplify --indent 2";
+                package = config.treefmt.build.wrapper;
               };
             })
           ];

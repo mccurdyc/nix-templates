@@ -56,6 +56,12 @@
         default = [ ];
         description = "Additional shells to inherit from via inputsFrom";
       };
+
+      extraShellHook = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = "Extra shell hook commands to run when entering the shell.";
+      };
     };
   });
 
@@ -75,8 +81,6 @@
       ];
 
       nixPackages = lib.optionals cfg.nix.enable [
-        pkgs.statix
-        pkgs.nixfmt
         pkgs.nil
       ];
 
@@ -118,7 +122,9 @@
           "";
     in
     lib.mkIf cfg.enable {
-      mccurdyc.devshell.formatter = lib.mkDefault pkgs.nixfmt;
+      mccurdyc.devshell.formatter = lib.mkDefault (
+        if (options ? treefmt) then config.treefmt.build.wrapper else pkgs.nixfmt
+      );
 
       inherit (cfg) formatter;
 
@@ -126,7 +132,7 @@
       devShells.default = pkgs.mkShell {
         inputsFrom = preCommitInputs ++ cfg.extraInputsFrom;
 
-        shellHook = dockerfileShellHook;
+        shellHook = dockerfileShellHook + cfg.extraShellHook;
 
         packages = buildPackages ++ nixPackages ++ containerPackages ++ cfg.extraPackages;
       };

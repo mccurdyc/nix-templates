@@ -3,24 +3,29 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    git-hooks.url = "github:cachix/git-hooks.nix";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
         "x86_64-linux"
       ];
 
-      perSystem =
-        { system, ... }:
-        let
-          pkgs = import inputs.nixpkgs {
-            inherit system;
-          };
+      imports = [
+        inputs.git-hooks.flakeModule
+        inputs.treefmt-nix.flakeModule
+        inputs.mccurdyc-preferences.flakeModules.default
+      ];
 
+      perSystem =
+        { pkgs, ... }:
+        let
           texlive = pkgs.texlive.combined.scheme-full;
 
           buildLatex = pkgs.writeShellScriptBin "build-latex" ''
@@ -50,20 +55,15 @@
           '';
         in
         {
-          devShells.default = pkgs.mkShell {
-            packages = with pkgs; [
-              # for building the latex treesitter grammar   (ノ ゜Д゜)ノ ︵ ┻━┻
-              nodejs
-
-              python3
-              buildLatex
-
-              # nix things
-              nil
-              deadnix
-              statix
-              nixfmt
-            ];
+          mccurdyc = {
+            pre-commit.enable = true;
+            devshell = {
+              extraPackages = [
+                pkgs.nodejs
+                pkgs.python3
+                buildLatex
+              ];
+            };
           };
 
           packages.default = pkgs.writeShellScriptBin "latex-serve" ''

@@ -1,40 +1,37 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    git-hooks.url = "github:cachix/git-hooks.nix";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
         "x86_64-linux"
       ];
 
+      imports = [
+        inputs.git-hooks.flakeModule
+        inputs.treefmt-nix.flakeModule
+        inputs.mccurdyc-preferences.flakeModules.default
+      ];
+
       perSystem =
-        { system, ... }:
-        let
-          pkgs = import inputs.nixpkgs {
-            inherit system;
-          };
-        in
+        { pkgs, ... }:
         {
-          devShells.default = pkgs.mkShell {
-            nativeBuildInputs = with pkgs; [
-              nasm
-              unixtools.xxd
-
-              shfmt
-
-              # nix
-              deadnix
-              statix
-              nil
-              nixfmt
-            ];
-            # libraries
-            buildInputs = [ ];
+          mccurdyc = {
+            pre-commit.enable = true;
+            devshell = {
+              extraPackages = [
+                pkgs.nasm
+                pkgs.unixtools.xxd
+              ];
+            };
           };
         };
     };
