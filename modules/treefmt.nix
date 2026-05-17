@@ -49,6 +49,9 @@
             rustfmt.enable = true;
           })
         ];
+        settings = lib.mkIf cfg.shell.enable {
+          formatter.shellcheck.excludes = [ ".envrc" ];
+        };
       };
     };
 }
