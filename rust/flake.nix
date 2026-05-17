@@ -3,15 +3,8 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     git-hooks.url = "github:cachix/git-hooks.nix";
     treefmt-nix.url = "github:numtide/treefmt-nix";
-
     flake-parts.url = "github:hercules-ci/flake-parts";
-    # rust-flake builds on:
-    # - https://github.com/ipetkov/crane
-    # - https://github.com/oxalica/rust-overlay
     rust-flake.url = "github:juspay/rust-flake";
-
-    # personal preferences
-    # mccurdyc-preferences.url = "path:../modules";
     mccurdyc-preferences.url = "github:mccurdyc/nix-templates?dir=modules";
   };
 
@@ -20,11 +13,9 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
-        "x86_64-darwin"
         "x86_64-linux"
       ];
 
-      # imports are core to how flake-parts evaluates flakeModules perSystem
       imports = [
         inputs.git-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
@@ -33,32 +24,8 @@
         inputs.rust-flake.flakeModules.nixpkgs
       ];
 
-      perSystem =
-        { pkgs, ... }:
-        {
-          rust-project.crates."app" = {
-            crane = {
-              args = {
-                nativeBuildInputs = [ pkgs.just ];
-              };
-              extraBuildArgs = {
-                buildPhaseCargoCommand = "just build";
-                checkPhaseCargoCommand = "just test";
-              };
-            };
-          };
-
-          mccurdyc = {
-            pre-commit = {
-              enable = true;
-              rust.enable = true;
-              just.enable = true;
-            };
-
-            devshell = {
-              extraPackages = [ pkgs.rust-analyzer ];
-            };
-          };
-        };
+      perSystem = {
+        mccurdyc.rust.enable = true;
+      };
     };
 }

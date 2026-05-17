@@ -18,12 +18,14 @@
         flakeModules = {
           devshell = ./devshell.nix;
           pre-commit = ./pre-commit.nix;
+          rust = ./rust.nix;
           treefmt = ./treefmt.nix;
           default = {
             imports = [
               ./devshell.nix
               ./pre-commit.nix
               ./dockerfile.nix
+              ./rust.nix
               ./treefmt.nix
             ];
           };
