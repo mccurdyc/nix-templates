@@ -1,8 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # go 1.23.3
-    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/314e12ba369ccdb9b352a4db26ff419f7c49fa84.tar.gz";
+    # https://www.nixhub.io/packages/go
+    # go 1.26.2
+    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/01fbdeef22b76df85ea168fbfe1bfd9e63681b30.tar.gz";
     git-hooks.url = "github:cachix/git-hooks.nix";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -35,7 +36,6 @@
           mccurdyc = {
             pre-commit.enable = true;
             devshell = {
-              nix.enable = true;
               container.enable = true;
               extraPackages = [
                 pkgs-go.go
