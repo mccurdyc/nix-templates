@@ -1,64 +1,129 @@
 # Cue
 
-## Cue Directory Structure / Patterns
+## Useful Commands
 
-### Patterns
-- `*_tool.cue` - **[Official]** special filename suffix that 
-    - https://cuetorials.com/first-steps/scripting/
-    - https://cuetorials.com/patterns/scripts-and-tasks/
-- `*_schema.cue` - **[My pattern]** where object schemas --- and default values --- are defined. Nothing special or official with this suffix.
-- `*_data.cue` - **[My pattern]** where data are defined. Nothing special or official with this suffix.
-- `main.cue` - **[My pattern]** main entrypoint to a directory. Nothing special or official with this name.
-- `transform.cue` - **[My pattern]** where transformation "functions" are defined. Nothing special or official with this filename.
-    - https://cuetorials.com/patterns/functions/
-        - Nothing special with the fields or `Transform` name.
-        - It's not actually a "function" it's just value unions like anything else.
+- Print one object at a "deep" level with values set at every level above
 
-- `config/`
-    - `cue.mod`
-        - Cue module directory. You probably won't ever touch this.
-        - `gen/` - **GENERATED** - These files were populated via the following
+    ```
+    cue eval ./path/to/subdirectory/... -e envoy
+    ```
 
-        ```bash
-        cue get go github.com/fluxcd/helm-controller/api/...
-        ```
-    - `stages/`
-        - Schema, scripts and global values set at this level
-            - `build_tool.cue` - script-like "functions".
-                - Any file ending in `_tool.cue`  can be used for scripting.
-            - `k8s_schema.cue`
-            - `k8s_data.cue`
-                - **THE MAIN ENTRYPOINT** - Full Helm-values file
-                    - "Pulls" / access values from stages and regions in the `for` loop.
-            - `stage_schema.cue`
-                - Schema for values that can be set at "lower" levels
-            - `main.cue`
-                - Global values
-        - `stages/prd/`
-            - `main.cue`
-                - Production-specific values that span regions
-            - `stages/prd/regions/<region>/`
-                    - `main.cue`
-                        - Region-specific entrypoint
-## Debugging
+- Print object at a SPECIFIC level
 
-### YAML fails to render
+    ```
+    cue eval ./path/to/subdirectory/main.cue -e envoy
+    ```
 
-<a id="cue-yaml-failure"></a>
+- Check yaml against cue
 
-Cue is failing to render YAML. You are possibly missing "concrete" values somewhere.
+    ```
+    cue vet ranges.yaml check.cue
+    ```
 
-To debug:
+- Vet Cue (give it the deepest level. It wont traverse down itself)
 
-```bash
-make cue/vet DIR="./stages/prd/regions"
-# check the log for `string`, `int`, various types, etc. Anything that is NOT a concrete value.
+    ```
+    cue vet -c --strict ./path/to/subdirectory/...
+    ```
+
+- Format
+
+    ```
+    cue fmt ./...
+    ```
+
+- Render YAML
+
+```
+package main
+
+import (
+	"encoding/yaml"
+	"tool/cli"
+)
+
+command: dump: {
+	task: print: cli.Print & {
+		text: yaml.Marshal(_rendered)
+	}
+}
 ```
 
-Usually the `import` statements at the top are a good indication if there is a struct
-that is causing it. For example, in the following, I would grep for `route` and `cluster`
-to see which routes and/or cluster is causing the issue.
+```
+cue cmd dump ./main/...
+```
 
-## More notes
+- YAML
+	- https://github.com/cue-lang/cue/blob/v0.7.0/doc/tutorial/kubernetes/README.md
+	- `cue import -f -R foo.yaml`
 
-- See [mccurdyc/cue-notes](https://github.com/mccurdyc/cue-notes/README.md)
+## Debugging
+- `incomplete value string:` - you are missing a concrete value somewhere.
+`yaml.Marshal` is EXTREMELY finicky. You will want to pull whatever out of
+`yaml.Marshal()` into a thing that you can run via `cue eval`. Look for places
+where you don't have concrete values. Those ALL need fixed.
+
+## Getting Started
+
+1. Define the interface you want users to use FIRST.
+1. Define the input schema --- with constraints and defaults
+    - Don't try to rely directly on the output schema for the input schema too
+    - I ran into a lot of pain doing this
+1. Define the output schema --- with contstraints and defaults. Use defaults generously --- you want (or need) to produce
+1. Define transformation "functions" via [the function pattern](https://cuetorials.com/patterns/functions/)
+
+- Mental model
+	- Think merging multi-level (or layered) value maps (JSON objects) without overrides
+	- "Objects" think "Go Structs"
+	- Schemas can have constraints and default values
+	- Packages are like Go package i.e., keep domains, etc. packaged
+	- Types and values are one and the same (for loops, etc)
+    - Order of evaluation does not matter
+	- In global packages, set defaults, DON'T set concrete values (in most cases)
+		- No such thing as "overwriting" at a deeper level
+	- You take the type and constraints, but cant overwrite once a value becomes concrete
+    - Types - https://cuetorials.com/overview/types-and-values/
+
+- Project Structure
+	- https://alpha.cuelang.org/docs/concept/modules-packages-instances/#instances
+	- Within a module, all `.cue` files with the same package name are part of the same package.
+	- A package is evaluated within the context of a certain directory.
+	- Within this context, only the files belonging to that package in that directory and its ancestor directories within the module are combined.
+	- We call that an _instance_ of a package.
+		- "fully-compiled, concrete data-structure of the package in this 'instance'" when you reference this
+	- _module root_: schema
+		- all policy
+	- _medial directories_: policy
+		- some policy
+	- _leaf directories_: data
+		- all data
+
+## Links / References
+
+- Have the Cue playground open to test minimal examples out
+    - https://cuelang.org/play
+- Cue Stdlib -  https://pkg.go.dev/cuelang.org/go/pkg
+
+### Understanding Fundamentals
+
+- https://cuelang.org/docs/concepts/logic/
+- https://alpha.cuelang.org/docs/howto/
+- https://cuetorials.com/overview/foundations/
+
+### Patterns
+
+- Pattern matching / avoiding switch - https://cuetorials.com/overview/types-and-values/#pattern-matching-constraints
+
+- Enums - https://cuelang.org/docs/tutorials/tour/types/disjunctions/
+
+- Defining "global" package variable for re-use in the package - https://alpha.cuelang.org/docs/howto/use-the-built-in-function-or/
+
+- Aliases - https://alpha.cuelang.org/docs/language-guide/templating/references/#aliases
+
+- List comprehension / for-each - https://alpha.cuelang.org/docs/language-guide/templating/comprehensions/
+
+- Applying constraint to many fields at once - https://alpha.cuelang.org/docs/language-guide/templating/constructing-maps/#pattern-constraints
+
+## Examples
+
+https://github.com/mccurdyc/playground/tree/main/cue
