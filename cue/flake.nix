@@ -1,8 +1,11 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # go 1.23.3
-    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/314e12ba369ccdb9b352a4db26ff419f7c49fa84.tar.gz";
+    # https://www.nixhub.io/packages/go
+    # go 1.26.2
+    nixpkgs-go.url = "https://github.com/NixOS/nixpkgs/archive/01fbdeef22b76df85ea168fbfe1bfd9e63681b30.tar.gz";
+    # cue 0.16.1
+    nixpkgs-cue.url = "https://github.com/NixOS/nixpkgs/archive/01fbdeef22b76df85ea168fbfe1bfd9e63681b30.tar.gz";
     git-hooks.url = "github:cachix/git-hooks.nix";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -30,36 +33,21 @@
             inherit system;
             config.allowUnfree = true;
           };
-
-          common = builtins.fetchGit {
-            url = "ssh://git@github.com/mccurdyc/playground.git";
-            # NOTE: you have to give it a commit for hermetic builds, you CANNOT use a branch name.
-            rev = "084060e7894c7e7c83d6491637d7c47a8eb1c83b";
-          };
-
-          pinned_cue = pkgs.callPackage "${common}/nix/common/github.nix" {
+          pkgs-cue = import inputs.nixpkgs-cue {
             inherit system;
-            org = "cue-lang";
-            name = "cue";
-            version = "v0.13.0";
-            # 'nix-prefetch-url https://github.com/cue-lang/cue/releases/download/v0.13.0/cue_v0.13.0_darwin_arm64.tar.gz'
-            sha256 =
-              {
-                "x86_64-linux" = "1adnf4hb9w0ncpcmvwi2y0k0318zz0xc6zp1sb6x4z50gl9rdfjr";
-                "aarch64-darwin" = "12l6ljdc7vjs5b1qygpzi1bacpwbm2fsb9hgan6wf84bickws2yp";
-              }
-              .${system};
+            config.allowUnfree = true;
           };
         in
         {
           mccurdyc = {
+            docs.cue.enable = true;
             pre-commit.enable = true;
             devshell = {
               extraPackages = [
-                pinned_cue
+                pkgs-go.go
+                pkgs-cue.cue
                 pkgs.curl
                 pkgs.jq
-                pkgs-go.go
                 pkgs.yq-go
               ];
             };

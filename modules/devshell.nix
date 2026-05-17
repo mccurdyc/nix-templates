@@ -123,6 +123,29 @@
           ''
         else
           "";
+
+      docsCfg = config.mccurdyc.docs or { };
+
+      docsShellHook =
+        let
+          mkDocHook =
+            name: fileCfg:
+            if (options.mccurdyc ? docs && (fileCfg.enable or false)) then
+              ''
+                if [ ! -f docs/${name} ]; then
+                  mkdir -p docs
+                  cat > docs/${name} << '__MCCURDYC_DOCS_EOF__'
+                ${fileCfg.content}
+                __MCCURDYC_DOCS_EOF__
+                  echo "Created docs/${name}"
+                fi
+              ''
+            else
+              "";
+        in
+        (mkDocHook "RUNBOOK.md" (docsCfg.runbook or { }))
+        + (mkDocHook "cue.md" (docsCfg.cue or { }))
+        + (mkDocHook "nix.md" (docsCfg.nix or { }));
     in
     lib.mkIf cfg.enable {
       mccurdyc.devshell.formatter = lib.mkDefault (
@@ -135,7 +158,7 @@
       devShells.default = pkgs.mkShell {
         inputsFrom = preCommitInputs ++ cfg.extraInputsFrom;
 
-        shellHook = dockerfileShellHook + cfg.extraShellHook;
+        shellHook = dockerfileShellHook + docsShellHook + cfg.extraShellHook;
 
         packages = buildPackages ++ nixPackages ++ containerPackages ++ cfg.extraPackages;
       };
