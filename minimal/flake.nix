@@ -22,12 +22,7 @@
       ];
 
       perSystem = _: {
-        mccurdyc = {
-          pre-commit.enable = true;
-          devshell = {
-            nix.enable = true;
-          };
-        };
+        mccurdyc = { };
       };
     };
 }
