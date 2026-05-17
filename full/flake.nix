@@ -25,7 +25,6 @@
 
       perSystem = _: {
         mccurdyc = {
-          pre-commit.enable = true;
           devshell = {
             container.enable = true;
           };
