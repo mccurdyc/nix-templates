@@ -25,7 +25,7 @@
         mccurdyc = {
           pre-commit.enable = true;
           devshell = {
-            container.enable = true;
+            nix.enable = true;
           };
         };
       };

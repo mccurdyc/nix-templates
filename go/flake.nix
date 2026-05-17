@@ -35,6 +35,7 @@
           mccurdyc = {
             pre-commit.enable = true;
             devshell = {
+              nix.enable = true;
               container.enable = true;
               extraPackages = [
                 pkgs-go.go
