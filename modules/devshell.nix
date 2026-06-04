@@ -41,7 +41,8 @@
       };
 
       formatter = lib.mkOption {
-        type = lib.types.package;
+        type = lib.types.nullOr lib.types.package;
+        default = null;
         description = "Formatter package for 'nix fmt'";
       };
 
@@ -149,10 +150,13 @@
     in
     lib.mkIf cfg.enable {
       mccurdyc.devshell.formatter = lib.mkDefault (
-        if (options ? treefmt) then config.treefmt.build.wrapper else pkgs.nixfmt
+        if (options ? treefmt && config.mccurdyc.pre-commit.enable) then
+          config.treefmt.build.wrapper
+        else
+          pkgs.nixfmt
       );
 
-      inherit (cfg) formatter;
+      formatter = lib.mkIf (cfg.formatter != null) cfg.formatter;
 
       # https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-mkShell
       devShells.default = pkgs.mkShell {
