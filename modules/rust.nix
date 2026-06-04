@@ -1,8 +1,9 @@
 # Rust project configuration module
 #
 # Higher-level module that configures a Rust development environment
-# by orchestrating the lower-level mccurdyc.{pre-commit,devshell,dockerfile}
-# modules.
+# by orchestrating the lower-level mccurdyc.{devshell,dockerfile} modules.
+# Pre-commit hooks for Rust are configured by importing flakeModules.pre-commit
+# and setting mccurdyc.pre-commit.rust.enable = true separately.
 #
 # Usage:
 #   perSystem.mccurdyc.rust = {
@@ -88,11 +89,6 @@ in
     in
     lib.mkIf cfg.enable {
       mccurdyc = {
-        pre-commit = {
-          rust.enable = true;
-          just.enable = cfg.just.enable;
-        };
-
         devshell = {
           extraPackages = [ pkgs.rust-analyzer ];
           container.enable = cfg.container.enable;
