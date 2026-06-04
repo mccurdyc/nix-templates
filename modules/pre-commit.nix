@@ -93,69 +93,72 @@ in
       scopedFiles =
         suffix: if cfg.rootDir == "." then suffix else "^${lib.escapeRegex cfg.rootDir}/${suffix}";
     in
-    lib.mkIf cfg.enable {
-      # https://flake.parts/options/git-hooks-nix.html
-      # usage: pre-commit run <check> --all-files
-      #
-      # check.enable runs all hooks inside the nix sandbox via `nix flake check`.
-      # Hooks that invoke build tools (cargo, just) cannot run in the sandbox --
-      # those are validated by their own crane/rust-flake check derivations.
-      # Only enable the nix check when no build-tool hook groups are active.
-      pre-commit = {
-        check.enable = !(cfg.rust.enable || cfg.just.enable);
-        settings = {
-          tools = {
-            inherit (pkgs) just;
+    if cfg.enable then
+      {
+        # https://flake.parts/options/git-hooks-nix.html
+        # usage: pre-commit run <check> --all-files
+        #
+        # check.enable runs all hooks inside the nix sandbox via `nix flake check`.
+        # Hooks that invoke build tools (cargo, just) cannot run in the sandbox --
+        # those are validated by their own crane/rust-flake check derivations.
+        # Only enable the nix check when no build-tool hook groups are active.
+        pre-commit = {
+          check.enable = !(cfg.rust.enable || cfg.just.enable);
+          settings = {
+            tools = {
+              inherit (pkgs) just;
+            };
+            hooks = lib.mkMerge [
+              (lib.mkIf cfg.just.enable {
+                just-test = {
+                  enable = true;
+                  name = "just-test";
+                  entry = cdEntry "${pkgs.just}/bin/just test";
+                  stages = [ "pre-commit" ];
+                  pass_filenames = false;
+                };
+
+                just-lint = {
+                  enable = true;
+                  name = "just-lint";
+                  entry = cdEntry "${pkgs.just}/bin/just lint";
+                  stages = [ "pre-commit" ];
+                  pass_filenames = false;
+                };
+              })
+
+              (lib.mkIf cfg.nix.enable {
+                flake-checker = {
+                  enable = true;
+                  files = scopedFiles ".*\\.nix$";
+                };
+              })
+
+              (lib.mkIf cfg.rust.enable {
+                cargo-check = {
+                  enable = true;
+                  entry = cdEntry "cargo check";
+                  files = scopedFiles ".*\\.rs$";
+                  pass_filenames = false;
+                };
+                clippy = {
+                  enable = true;
+                  entry = cdEntry "cargo clippy";
+                  files = scopedFiles ".*\\.rs$";
+                  pass_filenames = false;
+                };
+              })
+
+              (lib.mkIf (options ? treefmt) {
+                treefmt = {
+                  enable = true;
+                  package = config.treefmt.build.wrapper;
+                };
+              })
+            ];
           };
-          hooks = lib.mkMerge [
-            (lib.mkIf cfg.just.enable {
-              just-test = {
-                enable = true;
-                name = "just-test";
-                entry = cdEntry "${pkgs.just}/bin/just test";
-                stages = [ "pre-commit" ];
-                pass_filenames = false;
-              };
-
-              just-lint = {
-                enable = true;
-                name = "just-lint";
-                entry = cdEntry "${pkgs.just}/bin/just lint";
-                stages = [ "pre-commit" ];
-                pass_filenames = false;
-              };
-            })
-
-            (lib.mkIf cfg.nix.enable {
-              flake-checker = {
-                enable = true;
-                files = scopedFiles ".*\\.nix$";
-              };
-            })
-
-            (lib.mkIf cfg.rust.enable {
-              cargo-check = {
-                enable = true;
-                entry = cdEntry "cargo check";
-                files = scopedFiles ".*\\.rs$";
-                pass_filenames = false;
-              };
-              clippy = {
-                enable = true;
-                entry = cdEntry "cargo clippy";
-                files = scopedFiles ".*\\.rs$";
-                pass_filenames = false;
-              };
-            })
-
-            (lib.mkIf (options ? treefmt) {
-              treefmt = {
-                enable = true;
-                package = config.treefmt.build.wrapper;
-              };
-            })
-          ];
         };
-      };
-    };
+      }
+    else
+      { };
 }
