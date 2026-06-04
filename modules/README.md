@@ -30,6 +30,16 @@ perSystem.mccurdyc.pre-commit = {
 };
 ```
 
+### treefmt.nix
+
+Configures treefmt-nix formatters based on the
+`mccurdyc.pre-commit` option groups. Requires
+`treefmt-nix.flakeModule` to be imported alongside this module.
+
+No additional options -- reuses
+`mccurdyc.pre-commit.{nix,shell,rust}.enable` to determine which
+formatters to activate.
+
 ### devshell.nix
 
 Provides a configurable development shell with common tools.
@@ -79,19 +89,44 @@ perSystem.mccurdyc.rust = {
 };
 ```
 
+## Module Composition
+
+The `default` flakeModule includes: `devshell`, `docs`, `rust`, and
+`dockerfile`. It does **not** include `pre-commit` or `treefmt`
+because those require upstream flake module imports
+(`git-hooks-nix.flakeModule` and `treefmt-nix.flakeModule`
+respectively).
+
+To use pre-commit and treefmt, import them explicitly alongside
+their dependencies:
+
+```nix
+imports = [
+  nix-templates.flakeModules.default    # devshell, docs, rust, dockerfile
+  nix-templates.flakeModules.pre-commit # requires git-hooks-nix
+  nix-templates.flakeModules.treefmt    # requires treefmt-nix
+  git-hooks-nix.flakeModule
+  treefmt-nix.flakeModule
+];
+```
+
+Flakes that don't need pre-commit or treefmt simply omit those
+imports.
+
 ## Usage Examples
 
-### Rust Project (current setup)
+### Rust Project
 
 ```nix
 {
   imports = [
+    inputs.nix-templates.flakeModules.default
+    inputs.nix-templates.flakeModules.pre-commit
+    inputs.nix-templates.flakeModules.treefmt
     inputs.rust-flake.flakeModules.default
     inputs.rust-flake.flakeModules.nixpkgs
-    inputs.git-hooks.flakeModule
-    ./nix/modules/rust.nix
-    ./nix/modules/pre-commit.nix
-    ./nix/modules/devshell.nix
+    inputs.git-hooks-nix.flakeModule
+    inputs.treefmt-nix.flakeModule
   ];
 
   perSystem.mccurdyc = {
@@ -112,23 +147,15 @@ perSystem.mccurdyc.rust = {
 ```nix
 {
   imports = [
-    inputs.git-hooks.flakeModule
-    ./nix/modules/pre-commit.nix
-    ./nix/modules/devshell.nix
+    inputs.nix-templates.flakeModules.default
+    inputs.nix-templates.flakeModules.pre-commit
+    inputs.nix-templates.flakeModules.treefmt
+    inputs.git-hooks-nix.flakeModule
+    inputs.treefmt-nix.flakeModule
   ];
 
-  perSystem.mccurdyc = {
-    pre-commit = {
-      nix.enable = true;
-      shell.enable = true;
-      rust.enable = false;  # Explicitly disable Rust hooks
-    };
-
-    devshell = {
-      rust.enable = false;
-      extraPackages = with pkgs; [ python312 poetry ];
-    };
-  };
+  perSystem.mccurdyc.devshell.extraPackages =
+    with pkgs; [ python312 poetry ];
 }
 ```
 
@@ -137,21 +164,20 @@ perSystem.mccurdyc.rust = {
 ```nix
 {
   imports = [
-    inputs.git-hooks.flakeModule
-    ./nix/modules/pre-commit.nix
-    ./nix/modules/devshell.nix
+    inputs.nix-templates.flakeModules.default
+    inputs.nix-templates.flakeModules.pre-commit
+    inputs.nix-templates.flakeModules.treefmt
+    inputs.git-hooks-nix.flakeModule
+    inputs.treefmt-nix.flakeModule
   ];
 
   perSystem.mccurdyc = {
-    pre-commit = {
-      rust.enable = false;
-      just.enable = true;
-    };
+    pre-commit.just.enable = true;
 
     devshell = {
-      rust.enable = false;
       container.enable = true;
-      extraPackages = with pkgs; [ go gopls golangci-lint ];
+      extraPackages =
+        with pkgs; [ go gopls golangci-lint ];
     };
   };
 }
@@ -162,55 +188,47 @@ perSystem.mccurdyc.rust = {
 ```nix
 {
   imports = [
-    inputs.git-hooks.flakeModule
-    ./nix/modules/pre-commit.nix
-    ./nix/modules/devshell.nix
+    inputs.nix-templates.flakeModules.default
+    inputs.nix-templates.flakeModules.pre-commit
+    inputs.git-hooks-nix.flakeModule
   ];
 
-  perSystem.mccurdyc = {
-    pre-commit.nix.enable = true;  # Only Nix hooks
-
-    devshell = {
-      build.enable = false;
-      container.enable = false;
-      # Only Nix tools in the devshell
-    };
+  perSystem.mccurdyc.devshell = {
+    build.enable = false;
+    container.enable = false;
   };
 }
 ```
 
 ## Disabling Modules
 
-To completely disable a module, set its enable option to false:
+`pre-commit` and `treefmt` are disabled by not importing them (see
+Module Composition above).
+
+For modules included in `default`, set enable to false:
 
 ```nix
 perSystem.mccurdyc = {
-  pre-commit.enable = false;  # Disable all pre-commit hooks
-  devshell.enable = false;    # Disable the devshell
-  rust.enable = false;        # Disable Rust configuration
+  devshell.enable = false;
+  rust.enable = false;
 };
 ```
 
 ## Module Location
 
-These modules can be:
-1. **Copied** into each project's `nix/modules/` directory
-2. **Symlinked** from a central location
-3. **Imported** from a shared flake input
-4. **Vendored** via git submodules
-
-For maximum reusability, consider option 3:
+Import from the `nix-templates` flake input:
 
 ```nix
 {
-  inputs.mccurdyc-modules = {
-    url = "github:mccurdyc/nix-modules";
+  inputs.nix-templates = {
+    url = "github:mccurdyc/nix-templates";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
   imports = [
-    inputs.mccurdyc-modules.flakeModules.pre-commit
-    inputs.mccurdyc-modules.flakeModules.devshell
+    inputs.nix-templates.flakeModules.default
+    inputs.nix-templates.flakeModules.pre-commit
+    inputs.nix-templates.flakeModules.treefmt
   ];
 }
 ```

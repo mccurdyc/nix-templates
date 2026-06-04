@@ -25,10 +25,8 @@
             imports = [
               ./devshell.nix
               ./docs.nix
-              ./pre-commit.nix
               ./dockerfile.nix
               ./rust.nix
-              ./treefmt.nix
             ];
           };
         };
