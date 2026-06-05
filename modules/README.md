@@ -97,16 +97,30 @@ because those require upstream flake module imports
 (`git-hooks-nix.flakeModule` and `treefmt-nix.flakeModule`
 respectively).
 
+### Required Upstream Dependencies
+
+Consumers must declare these upstream flake inputs for the
+corresponding modules to work:
+
+| Dependency | URL | Required by |
+|---|---|---|
+| `git-hooks-nix` | `github:cachix/git-hooks.nix` | `pre-commit` |
+| `treefmt-nix` | `github:numtide/treefmt-nix` | `treefmt` |
+| `rust-flake` | `github:juspay/rust-flake` | `rust` (when enabled) |
+
+Input names are your choice -- the examples below use these
+names, but adjust to match your `inputs` block.
+
 To use pre-commit and treefmt, import them explicitly alongside
 their dependencies:
 
 ```nix
 imports = [
-  nix-templates.flakeModules.default    # devshell, docs, rust, dockerfile
-  nix-templates.flakeModules.pre-commit # requires git-hooks-nix
-  nix-templates.flakeModules.treefmt    # requires treefmt-nix
-  git-hooks-nix.flakeModule
-  treefmt-nix.flakeModule
+  inputs.nix-templates.flakeModules.default    # devshell, docs, rust, dockerfile
+  inputs.nix-templates.flakeModules.pre-commit # requires git-hooks-nix
+  inputs.nix-templates.flakeModules.treefmt    # requires treefmt-nix
+  inputs.git-hooks-nix.flakeModule
+  inputs.treefmt-nix.flakeModule
 ];
 ```
 
@@ -220,15 +234,23 @@ Import from the `nix-templates` flake input:
 
 ```nix
 {
-  inputs.nix-templates = {
-    url = "github:mccurdyc/nix-templates";
-    inputs.nixpkgs.follows = "nixpkgs";
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    git-hooks-nix.url = "github:cachix/git-hooks.nix";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    nix-templates = {
+      url = "github:mccurdyc/nix-templates?dir=modules";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   imports = [
     inputs.nix-templates.flakeModules.default
     inputs.nix-templates.flakeModules.pre-commit
     inputs.nix-templates.flakeModules.treefmt
+    inputs.git-hooks-nix.flakeModule
+    inputs.treefmt-nix.flakeModule
   ];
 }
 ```
