@@ -68,10 +68,8 @@
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         in
         {
-          mccurdyc = {
-            rust.enable = true;
-            devshell.extraPackages = [ rustToolchain ];
-          };
+          rust-project.toolchain = rustToolchain;
+          mccurdyc.rust.enable = true;
 
           packages = {
             app = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });

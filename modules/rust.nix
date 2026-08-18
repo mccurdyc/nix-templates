@@ -17,6 +17,13 @@ let
 in
 {
   options.perSystem = mkPerSystemOption (_: {
+    options.rust-project = {
+      toolchain = lib.mkOption {
+        type = lib.types.package;
+        description = "Rust toolchain package. Automatically set by rust-flake; otherwise set manually when using a custom Rust toolchain.";
+      };
+    };
+
     options.mccurdyc.rust = {
       enable = lib.mkEnableOption "Rust development environment" // {
         default = false;
@@ -90,7 +97,10 @@ in
     lib.mkIf cfg.enable {
       mccurdyc = {
         devshell = {
-          extraPackages = [ pkgs.rust-analyzer ];
+          extraPackages = [
+            pkgs.rust-analyzer
+            config.rust-project.toolchain
+          ];
           container.enable = cfg.container.enable;
         };
 
