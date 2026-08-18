@@ -8,6 +8,7 @@
 # Usage:
 #   perSystem.mccurdyc.rust = {
 #     enable = true;
+#     toolchain = config.rust-project.toolchain; # set by rust-flake
 #     just.enable = true;
 #     container.enable = true;
 #   };
@@ -17,16 +18,21 @@ let
 in
 {
   options.perSystem = mkPerSystemOption (_: {
-    options.rust-project = {
-      toolchain = lib.mkOption {
-        type = lib.types.package;
-        description = "Rust toolchain package. Automatically set by rust-flake; otherwise set manually when using a custom Rust toolchain.";
-      };
-    };
-
     options.mccurdyc.rust = {
       enable = lib.mkEnableOption "Rust development environment" // {
         default = false;
+      };
+
+      toolchain = lib.mkOption {
+        type = lib.types.nullOr lib.types.package;
+        default = null;
+        description = ''
+          Rust toolchain package to include in the devshell.
+
+          When using rust-flake, this is auto-discovered from
+          `config.rust-project.toolchain` and does not need to be set manually.
+          Otherwise, provide a toolchain package (for example, from rust-overlay).
+        '';
       };
 
       just = {
@@ -93,13 +99,20 @@ in
     }:
     let
       cfg = config.mccurdyc.rust;
+
+      rustToolchain =
+        if cfg.toolchain != null then
+          cfg.toolchain
+        else
+          config.rust-project.toolchain
+            or (throw "mccurdyc.rust.toolchain is null and rust-project.toolchain is not set. Import rust-flake (which sets rust-project.toolchain) or set perSystem.mccurdyc.rust.toolchain manually.");
     in
     lib.mkIf cfg.enable {
       mccurdyc = {
         devshell = {
           extraPackages = [
             pkgs.rust-analyzer
-            config.rust-project.toolchain
+            rustToolchain
           ];
           container.enable = cfg.container.enable;
         };

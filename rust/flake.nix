@@ -69,7 +69,10 @@
         in
         {
           rust-project.toolchain = rustToolchain;
-          mccurdyc.rust.enable = true;
+          mccurdyc.rust = {
+            enable = true;
+            toolchain = rustToolchain;
+          };
 
           packages = {
             app = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
