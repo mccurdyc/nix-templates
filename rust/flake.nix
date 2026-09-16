@@ -68,10 +68,18 @@
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         in
         {
-          rust-project.toolchain = rustToolchain;
           mccurdyc.rust = {
             enable = true;
             toolchain = rustToolchain;
+          };
+          mccurdyc.devshell = {
+            extraPackages = [ pkgs.lynx ];
+            extraShellHook = ''
+              if [ -f Cargo.toml ] && [ ! -d target/doc ]; then
+                echo "Generating Rust docs (cargo doc --no-deps)..."
+                cargo doc --no-deps
+              fi
+            '';
           };
 
           packages = {
