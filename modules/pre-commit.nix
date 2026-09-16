@@ -77,7 +77,6 @@ in
     {
       config,
       pkgs,
-      options,
       ...
     }:
     let
@@ -92,7 +91,6 @@ in
       # ("." ) means no restriction.
       scopedFiles =
         suffix: if cfg.rootDir == "." then suffix else "^${lib.escapeRegex cfg.rootDir}/${suffix}";
-      treefmtWrapper = if (options ? treefmt) then config.treefmt.build.wrapper else null;
     in
     lib.mkIf cfg.enable {
       # https://flake.parts/options/git-hooks-nix.html
@@ -149,12 +147,6 @@ in
               };
             })
 
-            (lib.mkIf (treefmtWrapper != null) {
-              treefmt = {
-                enable = true;
-                package = treefmtWrapper;
-              };
-            })
           ];
         };
       };

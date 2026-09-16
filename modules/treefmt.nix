@@ -1,7 +1,9 @@
 # Treefmt configuration module
 #
 # Provides a unified formatter via treefmt-nix, configured based on the
-# mccurdyc.pre-commit option groups (nix, shell, rust).
+# mccurdyc.pre-commit option groups (nix, shell, rust), and registers
+# treefmt as a pre-commit hook when inputs.git-hooks.flakeModule is also
+# imported.
 #
 # Consumers must import inputs.treefmt-nix.flakeModule alongside this module.
 {
@@ -23,6 +25,8 @@
     let
       cfg = config.mccurdyc.pre-commit;
       hasTreefmt = options ? treefmt;
+      hasPreCommit = options ? pre-commit;
+      treefmtWrapper = if hasTreefmt then config.treefmt.build.wrapper else null;
     in
     lib.mkIf (hasTreefmt && cfg.enable) {
       treefmt = {
@@ -52,6 +56,11 @@
         settings = lib.mkIf cfg.shell.enable {
           formatter.shellcheck.excludes = [ ".envrc" ];
         };
+      };
+
+      pre-commit.settings.hooks.treefmt = lib.mkIf (hasPreCommit && treefmtWrapper != null) {
+        enable = true;
+        package = treefmtWrapper;
       };
     };
 }

@@ -24,6 +24,8 @@
         inputs.git-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
         inputs.mccurdyc-preferences.flakeModules.default
+        inputs.mccurdyc-preferences.flakeModules.pre-commit
+        inputs.mccurdyc-preferences.flakeModules.treefmt
 
         # Apply rust-overlay to pkgs in a separate module so the
         # perSystem below can use pkgs.rust-bin without circularity.
@@ -63,15 +65,27 @@
               pkg-config
               makeWrapper
             ];
+            buildInputs = with pkgs; [
+              openssl
+            ];
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         in
         {
-          rust-project.toolchain = rustToolchain;
           mccurdyc.rust = {
             enable = true;
             toolchain = rustToolchain;
+          };
+
+          mccurdyc.devshell = {
+            extraPackages = [
+              pkgs.pkg-config
+              pkgs.openssl
+            ];
+            extraShellHook = ''
+              export OPENSSL_DIR="${pkgs.openssl.dev}"
+            '';
           };
 
           packages = {
