@@ -78,21 +78,15 @@
             toolchain = rustToolchain;
           };
           mccurdyc.devshell = {
-            extraPackages = [ pkgs.lynx ];
-            extraShellHook = ''
-              if [ -f Cargo.toml ] && [ ! -d target/doc ]; then
-                echo "Generating Rust docs (cargo doc --no-deps)..."
-                cargo doc --no-deps
-              fi
-            '';
-          };
-
-          mccurdyc.devshell = {
             extraPackages = [
               pkgs.pkg-config
               pkgs.openssl
             ];
             extraShellHook = ''
+              if [ -f Cargo.toml ] && [ ! -d target/doc ]; then
+                echo "Generating Rust docs (cargo doc --no-deps)..."
+                cargo doc --no-deps
+              fi
               export OPENSSL_DIR="${pkgs.openssl.dev}"
             '';
           };
